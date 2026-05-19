@@ -3,18 +3,42 @@
     <div class="max-w-4xl mx-auto">
       <h1 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">{{ tt('history.title') }}</h1>
 
-      <div v-if="loading" class="flex justify-center py-20">
-        <svg class="w-8 h-8 text-primary-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-        </svg>
+      <!-- 骨架屏加载 -->
+      <div v-if="loading" class="space-y-3">
+        <div v-for="i in 5" :key="i" class="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-gray-50 dark:border-slate-700/30 animate-pulse">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 space-y-3">
+              <div class="h-5 bg-gray-200 dark:bg-slate-700 rounded-lg w-3/5 skeleton-shimmer"></div>
+              <div class="h-4 bg-gray-200 dark:bg-slate-700 rounded-lg w-full skeleton-shimmer"></div>
+              <div class="h-4 bg-gray-200 dark:bg-slate-700 rounded-lg w-2/3 skeleton-shimmer"></div>
+              <div class="flex gap-2">
+                <div class="h-3 bg-gray-200 dark:bg-slate-700 rounded w-24 skeleton-shimmer"></div>
+                <div class="h-3 bg-gray-200 dark:bg-slate-700 rounded w-16 skeleton-shimmer"></div>
+              </div>
+            </div>
+            <div class="w-8 h-8 bg-gray-200 dark:bg-slate-700 rounded-lg skeleton-shimmer flex-shrink-0"></div>
+          </div>
+        </div>
       </div>
 
-      <div v-if="!loading && groups.length === 0" class="flex flex-col items-center justify-center py-20 text-center">
-        <svg class="w-24 h-24 text-gray-300 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
-        </svg>
-        <h2 class="text-xl font-semibold text-gray-600 dark:text-gray-300 mb-2">——</h2>
-        <p class="text-gray-400">{{ tt('history.empty') }}</p>
+      <div v-if="!loading && groups.length === 0" class="flex flex-col items-center justify-center py-20 text-center animate-slide-in">
+        <!-- 空状态插图 -->
+        <div class="relative mb-8">
+          <svg class="w-32 h-32 text-gray-200 dark:text-slate-700" viewBox="0 0 120 120" fill="none">
+            <circle cx="60" cy="60" r="50" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4" opacity="0.3"/>
+            <circle cx="60" cy="60" r="35" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 3" opacity="0.2"/>
+            <!-- 时钟指针 -->
+            <path d="M60 35V60L75 72" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+            <circle cx="60" cy="60" r="4" fill="currentColor" opacity="0.4"/>
+          </svg>
+          <div class="absolute -top-1 -right-1 w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center">
+            <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+          </div>
+        </div>
+        <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2">暂无历史记录</h2>
+        <p class="text-gray-400 dark:text-gray-500 max-w-xs">{{ tt('history.empty') }}</p>
       </div>
 
       <div v-else class="space-y-3">
@@ -98,9 +122,14 @@ function parsePrefixedId(prefixed: string) {
 }
 
 function openGroup(group: HistoryGroup) {
-  // 打开会话中最早的那条记录
-  const first = group.items[0]
-  router.push({ path: '/', query: { historyType: first.type, historyId: first.rawId } })
+  // 传递组内所有记录，确保完整会话展示
+  const itemsParam = encodeURIComponent(
+    JSON.stringify(group.items.map(item => ({
+      type: item.type,
+      rawId: item.rawId
+    })))
+  )
+  router.push({ path: '/', query: { historyItems: itemsParam } })
 }
 
 function deleteGroup(group: HistoryGroup) {
