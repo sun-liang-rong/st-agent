@@ -1,4 +1,5 @@
 """历史记录服务模块"""
+import json
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -11,8 +12,9 @@ def create_history(
     file_id: str,
     file_name: str,
     user_prompt: str,
-    generated_prompt: str,
-    image_url: str,
+    generated_prompt: str = "",
+    image_url: str = "",
+    dashboard_spec: Optional[dict] = None,
     user_id: Optional[int] = None,
     status: str = "completed",
 ) -> ReportHistory:
@@ -24,6 +26,7 @@ def create_history(
         user_prompt=user_prompt,
         generated_prompt=generated_prompt,
         image_url=image_url,
+        dashboard_spec=json.dumps(dashboard_spec, ensure_ascii=False) if dashboard_spec else None,
         status=status,
     )
     db.add(record)
