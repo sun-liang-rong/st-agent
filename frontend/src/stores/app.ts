@@ -8,13 +8,14 @@ export const useAppStore = defineStore('app', () => {
   const theme = ref<'light' | 'dark'>('light')
   const settings = ref<UserSettings>({
     theme: 'light',
+    fontSize: 'medium',
+    codeFont: 'mono',
+    messageDensity: 'comfortable',
     defaultPromptModel: 'shangtang-model-a',
-    defaultImageModel: 'shangtang-model-b',
     apiKeys: {}
   })
   const currentFile = ref<ParsedExcel | null>(null)
   const messages = ref<Message[]>([])
-  const currentTaskId = ref<string | null>(null)
   const loading = ref(false)
   const sideBarOpen = ref(true)
 
@@ -65,16 +66,16 @@ export const useAppStore = defineStore('app', () => {
 
   function clearMessages() {
     messages.value = []
+  }
+
+  function resetConversation() {
+    messages.value = []
     currentFile.value = null
-    currentTaskId.value = null
+    loading.value = false
   }
 
   function setCurrentFile(file: ParsedExcel | null) {
     currentFile.value = file
-  }
-
-  function setTaskId(taskId: string | null) {
-    currentTaskId.value = taskId
   }
 
   function setLoading(state: boolean) {
@@ -91,7 +92,6 @@ export const useAppStore = defineStore('app', () => {
     settings,
     currentFile,
     messages,
-    currentTaskId,
     loading,
     sideBarOpen,
     isDark,
@@ -101,8 +101,8 @@ export const useAppStore = defineStore('app', () => {
     loadSettings,
     addMessage,
     clearMessages,
+    resetConversation,
     setCurrentFile,
-    setTaskId,
     setLoading,
     toggleSideBar
   }
