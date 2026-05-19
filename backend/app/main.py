@@ -1,7 +1,7 @@
 """FastAPI 主应用"""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
+
 import os
 
 from app.config import get_settings
@@ -13,7 +13,7 @@ settings = get_settings()
 
 # 确保上传和生成目录存在
 os.makedirs("uploads", exist_ok=True)
-os.makedirs("generated", exist_ok=True)
+
 
 # 创建数据库表
 Base.metadata.create_all(bind=engine)
@@ -40,6 +40,7 @@ app.add_middleware(
 
 # 注册路由
 app.include_router(api_router, prefix="/api/v1", tags=["api"])
+
 
 
 # 健康检查

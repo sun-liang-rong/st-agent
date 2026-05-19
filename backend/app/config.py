@@ -38,7 +38,7 @@ class Settings:
     # 书生大模型 API 配置
     SENSENOVA_API_KEY: str = "sk-8JEVTH1zNypwQqa9z9fghTfJ2coqpceD"
     SENSENOVA_PROMPT_MODEL: str = "sensenova-6.7-flash-lite"
-    SENSENOVA_IMAGE_MODEL: str = "sensenova-u1-fast"
+
     SENSENOVA_API_BASE: str = "https://token.sensenova.cn/v1"
     
     # JWT 配置
