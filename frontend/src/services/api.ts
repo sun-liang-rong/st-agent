@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { UploadResponse, GenerateRequest, GenerateResponse, TaskStatusResponse } from '@/types'
+import type { UploadResponse, GenerateRequest, GenerateResponse, TaskStatusResponse, PreviewResponse, SuggestResponse, DashboardSpec } from '@/types'
 
 // 创建 axios 实例
 const api = axios.create({
@@ -53,9 +53,18 @@ export const apiService = {
     return api.post('/generate', request)
   },
 
-  // 执行任务
-  executeTask(taskId: string): Promise<any> {
-    return api.post(`/generate/${taskId}/execute`)
+  // 预览文件数据
+  getFilePreview(fileId: string, rows: number = 50): Promise<PreviewResponse> {
+    return api.get(`/upload/${fileId}/preview`, { params: { rows } })
+  },
+
+  // 获取 AI 建议的分析提示词
+  suggestPrompt(fileId: string): Promise<SuggestResponse> {
+    return api.get(`/upload/${fileId}/suggest`)
+  },
+
+  confirmDashboard(taskId: string, dashboardSpec: DashboardSpec): Promise<any> {
+    return api.post(`/generate/${taskId}/confirm`, { dashboardSpec })
   },
 
   // 查询任务状态
