@@ -4,10 +4,18 @@ import { useAuthStore } from '@/stores/auth'
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
+    name: 'landing',
+    component: () => import('@/pages/LandingPage.vue'),
+    meta: {
+      title: 'AI 旅行攻略'
+    }
+  },
+  {
+    path: '/app',
     name: 'home',
     component: () => import('@/pages/Home.vue'),
     meta: {
-      title: 'AI 智能报表生成',
+      title: 'AI 旅行攻略',
       requiresAuth: true
     }
   },
@@ -54,6 +62,14 @@ const routes: RouteRecordRaw[] = [
     meta: {
       title: '帮助'
     }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    component: () => import('@/pages/NotFound.vue'),
+    meta: {
+      title: '页面未找到'
+    }
   }
 ]
 
@@ -62,10 +78,10 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
   
-  document.title = to.meta.title ? `${to.meta.title} - AI 智能报表生成` : 'AI 智能报表生成'
+  document.title = to.meta.title ? `${to.meta.title} - AI 旅行攻略` : 'AI 旅行攻略'
   
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {

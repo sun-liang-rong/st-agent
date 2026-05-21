@@ -5,19 +5,28 @@
     :style="{ background: themeOverlayColor }">
   </div>
 
-  <div id="app" :class="{ dark: isDark }">
-    <div class="flex h-screen bg-gray-50 dark:bg-slate-900">
-      <!-- 侧边栏 -->
-      <aside 
-        v-if="sideBarOpen && isAuthenticated"
-        class="w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 flex flex-col shrink-0"
+  <div id="app" :class="appClasses">
+    <!-- ── 仪表盘布局：侧边栏 + 顶栏 + 页面内容 ── -->
+    <template v-if="!isLandingPage">
+      <div class="flex h-screen bg-gray-50 dark:bg-slate-900">
+        <!-- 移动端侧边栏遮罩 -->
+        <div
+          v-if="sideBarOpen && isAuthenticated"
+          class="fixed inset-0 bg-black/30 dark:bg-black/50 z-20 md:hidden backdrop-blur-sm transition-all duration-300"
+          @click="toggleSideBar"
+        ></div>
+
+        <!-- 侧边栏 -->
+        <aside 
+          v-if="sideBarOpen && isAuthenticated"
+          class="w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 flex flex-col shrink-0 md:relative fixed left-0 top-0 h-full z-30 transition-all duration-300 shadow-xl md:shadow-none"
       >
         <!-- Logo 区 -->
         <div class="p-5 border-b border-gray-100 dark:border-slate-700/50">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl shadow-sm shadow-primary-200 dark:shadow-primary-900/30 flex items-center justify-center">
+            <div class="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl shadow-sm shadow-emerald-200 dark:shadow-emerald-900/30 flex items-center justify-center">
               <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
               </svg>
             </div>
             <div>
@@ -88,7 +97,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
               </svg>
             </button>
-            <h1 class="text-lg font-bold text-primary-600">{{ t('app.title', appStore.locale) }}</h1>
+            <h1 class="text-lg font-bold text-emerald-600">{{ t('app.title', appStore.locale) }}</h1>
           </div>
           <button
             v-if="!isAuthenticated && route.path !== '/login' && route.path !== '/register'"
@@ -109,7 +118,15 @@
         </div>
       </main>
     </div>
+  </template>
+  
+  <!-- ── 官网首页：独立布局，不继承仪表盘的 flex h-screen ── -->
+  <template v-else>
+    <router-view />
+  </template>
   </div>
+  <!-- 全局 Toast 通知 -->
+  <Toast />
 </template>
 
 <script setup lang="ts">
@@ -118,6 +135,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useAuthStore } from '@/stores/auth'
 import { t } from '@/i18n'
+import Toast from '@/components/Toast.vue'
 import { h } from 'vue'
 
 const router = useRouter()
@@ -128,6 +146,27 @@ const authStore = useAuthStore()
 const isDark = computed(() => appStore.isDark)
 const sideBarOpen = computed(() => appStore.sideBarOpen)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+const isLandingPage = computed(() => route.name === 'landing')
+
+const fontSizeClass = computed(() => {
+  const map = { small: 'text-sm', medium: 'text-base', large: 'text-lg' }
+  return map[appStore.settings.fontSize] || 'text-base'
+})
+
+const codeFontClass = computed(() => {
+  return appStore.settings.codeFont === 'system' ? 'code-font-system' : ''
+})
+
+const densityClass = computed(() => {
+  return appStore.settings.messageDensity === 'compact' ? 'density-compact' : ''
+})
+
+const appClasses = computed(() => ({
+  dark: isDark.value,
+  [fontSizeClass.value]: true,
+  [codeFontClass.value]: codeFontClass.value !== '',
+  [densityClass.value]: densityClass.value !== '',
+}))
 const currentUser = computed(() => authStore.currentUser)
 const userInitial = computed(() => {
   if (currentUser.value?.username) return currentUser.value.username.charAt(0).toUpperCase()
@@ -180,10 +219,11 @@ async function handleLogout() {
 // 导航项（响应式翻译）
 const navItems = computed(() => [
   {
-    path: '/',
+    path: '/app',
     name: t('nav.home', appStore.locale),
     icon: () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', class: 'w-5 h-5' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M3 12l2-2m0 0l7-7 7 7m-7-7v18M10.5 19l1.5 1.5L13.5 19' })
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '1.5', d: 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z' }),
+      h('circle', { cx: '12', cy: '10', r: '3', fill: 'currentColor' })
     ])
   },
   {
@@ -199,13 +239,6 @@ const navItems = computed(() => [
     icon: () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', class: 'w-5 h-5' }, [
       h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 0 0-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 0 0-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 0 0-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 0 0-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 0 0 1.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z' }),
       h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z' })
-    ])
-  },
-  {
-    path: '/help',
-    name: t('nav.help', appStore.locale),
-    icon: () => h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24', class: 'w-5 h-5' }, [
-      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z' })
     ])
   }
 ])

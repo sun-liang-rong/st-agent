@@ -1,6 +1,9 @@
 """FastAPI 主应用"""
+import logging
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 import os
 
@@ -11,14 +14,38 @@ from app.models import Base, engine
 
 settings = get_settings()
 
+# ── 日志配置 ──
+LOG_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+logging.basicConfig(
+    level=logging.DEBUG if settings.APP_DEBUG else logging.INFO,
+    format=LOG_FORMAT,
+    datefmt=LOG_DATE_FORMAT,
+    handlers=[
+        logging.StreamHandler(sys.stdout),  # 输出到控制台
+    ],
+)
+
+# 设置第三方库的日志级别，避免过多干扰
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.access").setLevel(logging.INFO)
+
+logger = logging.getLogger("app")
+logger.info("🚀 应用启动中...")
+
 # 确保上传和生成目录存在
 os.makedirs("uploads", exist_ok=True)
+os.makedirs("generated", exist_ok=True)
 
 
 # 创建数据库表
 Base.metadata.create_all(bind=engine)
 
 
+# 挂载静态文件目录（生成的图片可通过 /generated/xxx.png 访问）
 app = FastAPI(
     title=settings.APP_NAME,
     description="AI 智能报表生成平台后端 API",
@@ -26,6 +53,8 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+app.mount("/generated", StaticFiles(directory="generated"), name="generated")
 
 # 配置 CORS
 origins = settings.CORS_ORIGINS.split(",")

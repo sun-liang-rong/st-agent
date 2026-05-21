@@ -1,4 +1,4 @@
-"""配置模块"""
+﻿"""配置模块"""
 import os
 from functools import lru_cache
 
@@ -38,8 +38,11 @@ class Settings:
     # 书生大模型 API 配置
     SENSENOVA_API_KEY: str = "sk-8JEVTH1zNypwQqa9z9fghTfJ2coqpceD"
     SENSENOVA_PROMPT_MODEL: str = "sensenova-6.7-flash-lite"
-
     SENSENOVA_API_BASE: str = "https://token.sensenova.cn/v1"
+    
+    # SenseNova U1 Fast 图像生成模型
+    SENSENOVA_U1_MODEL: str = "sensenova-u1-fast"
+    SENSENOVA_U1_API_BASE: str = "https://token.sensenova.cn/v1"
     
     # JWT 配置
     SECRET_KEY: str = "your-secret-key-change-in-production"

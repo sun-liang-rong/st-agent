@@ -1,125 +1,75 @@
-// 进度信息
-export interface ProgressInfo {
-  step: number;
-  total: number;
-  message: string;
-}
+// ── 旅游攻略相关类型 ──
 
-// ── 看板相关类型 ──
-
-export interface DashboardChart {
+export interface TravelMessage {
   id: string;
-  title: string;
-  type: 'line' | 'bar' | 'pie' | 'scatter' | 'radar' | 'funnel' | 'kline' | 'heatmap' | 'treemap';
-  size: 'full' | 'half' | 'third';
-  option: Record<string, any>;
-}
-
-export interface DashboardSpec {
-  title: string;
-  description?: string;
-  charts: DashboardChart[];
-}
-
-// 消息类型
-export interface Message {
-  id: string;
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant';
   content: string;
   timestamp: number;
-  attachments?: FileAttachment[];
   imageUrl?: string;
-  dashboardSpec?: DashboardSpec;
-  progress?: ProgressInfo;
-  /** 待用户确认的 AI 生成提示词（两阶段模式） */
-  promptForReview?: string;
-  /** 消息所处的阶段: 'prompt' = 等待用户确认提示词, 'complete' = 已完成 */
-  phase?: 'prompt' | 'complete';
+  loading?: boolean;
 }
 
-// 文件附件
-export interface FileAttachment {
-  id: string;
-  name: string;
-  type: 'xlsx' | 'xls' | 'csv';
-  size: number;
-  data?: string;
+export interface TravelRequest {
+  destination: string;
+  days: number;
+  preferences: string;
 }
 
-// Sheet信息
-export interface SheetInfo {
-  name: string;
-  rowCount: number;
-  colCount: number;
+export interface TravelResponse {
+  taskId: string;
+  itinerary: string;
+  imageUrl: string;
 }
 
-// 上传响应
-export interface UploadResponse {
-  fileId: string;
-  fileName: string;
-  fileSize: number;
-  sheets: SheetInfo[];
-  metadata: {
-    totalRows: number;
-    totalCols: number;
+export interface TravelProgressEvent {
+  type: 'progress';
+  data: {
+    message: string;
+    step: number;
+    total: number;
   };
 }
 
-// 生成请求
-export interface GenerateRequest {
-  fileId: string;
-  userPrompt: string;
-  modelConfig?: ModelConfig;
-  selectedColumns?: string[];
-  chartType?: string;
-  chartTitle?: string;
+export interface TravelItineraryEvent {
+  type: 'itinerary';
+  data: {
+    content: string;
+    destination: string;
+    days: number;
+  };
 }
 
-// 模型配置
-export interface ModelConfig {
-  promptModel: string;
-  imageModel: string;
+export interface TravelImageEvent {
+  type: 'image';
+  data: {
+    url: string;
+  };
 }
 
-// 生成响应
-export interface GenerateResponse {
-  taskId: string;
-  status: 'pending' | 'processing' | 'spec_ready' | 'completed' | 'failed';
-  dashboardSpec?: DashboardSpec;
-  message?: string;
+export interface TravelCompletedEvent {
+  type: 'completed';
+  data: {
+    message: string;
+  };
 }
 
-// 任务状态
-export interface TaskStatusResponse {
-  taskId: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
-  progress: number;
-  currentStep: string;
-  error?: string;
-  result?: TaskResult;
+export interface TravelErrorEvent {
+  type: 'error';
+  data: {
+    message: string;
+  };
 }
 
-// 任务结果
-export interface TaskResult {
-  imageUrl: string;
-  prompt: string;
-  generatedAt: string;
-}
+export type TravelSSEEvent =
+  | TravelProgressEvent
+  | TravelItineraryEvent
+  | TravelImageEvent
+  | TravelCompletedEvent
+  | TravelErrorEvent;
 
-// 对话历史
+// ── 历史记录类型（简化） ──
+
 export interface ChatHistory {
-  id: string;
-  title: string;
-  userPrompt: string;
-  generatedPrompt: string;
-  dashboardSpec?: DashboardSpec;
-  fileName: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// 聊天消息历史
-export interface ChatMessageHistory {
   id: string;
   title: string;
   userMessage: string;
@@ -127,7 +77,28 @@ export interface ChatMessageHistory {
   createdAt: string;
 }
 
-// 用户设置
+// ── 兼容旧类型（供 store / History 页面使用） ──
+
+export interface Message {
+  id: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: number;
+  attachments?: any[];
+  imageUrl?: string;
+  progress?: { step: number; total: number; message: string };
+  phase?: 'prompt' | 'complete';
+}
+
+export interface ParsedExcel {
+  fileId: string;
+  fileName: string;
+  sheets: any[];
+  metadata: { totalRows: number; totalCols: number; sheetCount: number };
+}
+
+// ── 用户设置（保留） ──
+
 export interface UserSettings {
   theme: 'light' | 'dark';
   fontSize: 'small' | 'medium' | 'large';
@@ -138,69 +109,3 @@ export interface UserSettings {
     shangtang?: string;
   };
 }
-
-// Sheet数据
-export interface Sheet {
-  name: string;
-  headers: string[];
-  rows: Record<string, any>[];
-  summary?: {
-    numericColumns: string[];
-    categoricalColumns: string[];
-    dateColumns: string[];
-  };
-}
-
-// Excel数据
-export interface ParsedExcel {
-  fileId: string;
-  fileName: string;
-  sheets: Sheet[];
-  metadata: {
-    totalRows: number;
-    totalCols: number;
-    sheetCount: number;
-  };
-}
-
-// ── 数据预览相关类型 ──
-
-// 列信息
-export interface ColumnInfo {
-  name: string;
-  dtype: 'numeric' | 'text' | 'datetime';
-  nullCount: number;
-  stats?: {
-    min: number | null;
-    max: number | null;
-    mean: number | null;
-    median: number | null;
-  };
-  uniqueValues?: number;
-}
-
-// 预览响应
-export interface PreviewResponse {
-  columns: ColumnInfo[];
-  rows: any[][];
-  totalRows: number;
-  totalCols: number;
-  columnNames: string[];
-}
-
-// AI 建议提示词响应
-export interface SuggestResponse {
-  suggestion: string;
-}
-
-// 图表类型
-export type ChartType = 'bar' | 'line' | 'pie' | 'scatter' | 'combo';
-
-// 图表类型中文映射
-export const CHART_TYPE_LABELS: Record<ChartType, string> = {
-  bar: '柱状图',
-  line: '折线图',
-  pie: '饼图',
-  scatter: '散点图',
-  combo: '组合看板',
-};

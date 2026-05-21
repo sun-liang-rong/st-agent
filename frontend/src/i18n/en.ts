@@ -1,13 +1,13 @@
 export const en: Record<string, string> = {
   // Navigation
-  'nav.home': 'Home',
+  'nav.home': 'Travel Guide',
   'nav.history': 'History',
   'nav.settings': 'Settings',
   'nav.help': 'Help',
 
   // Sidebar
-  'app.title': 'AI Report',
-  'app.subtitle': 'Smart Data Analysis',
+  'app.title': 'AI Travel Guide',
+  'app.subtitle': 'Smart Travel Planner',
   'sidebar.theme': 'Theme',
   'sidebar.dark': 'Dark',
   'sidebar.light': 'Light',
@@ -15,7 +15,7 @@ export const en: Record<string, string> = {
 
   // Login
   'login.title': 'Welcome Back',
-  'login.subtitle': 'Sign in to AI Report Platform',
+  'login.subtitle': 'Sign in to AI Travel Guide',
   'login.username': 'Username',
   'login.password': 'Password',
   'login.remember': 'Remember me',
@@ -27,7 +27,7 @@ export const en: Record<string, string> = {
 
   // Register
   'register.title': 'Create Account',
-  'register.subtitle': 'Register for AI Report Platform',
+  'register.subtitle': 'Register for AI Travel Guide',
   'register.username': 'Username',
   'register.password': 'Password',
   'register.confirmPassword': 'Confirm Password',
@@ -39,19 +39,14 @@ export const en: Record<string, string> = {
   'register.passwordMismatch': 'Passwords do not match',
 
   // Home
-  'home.emptyTitle': 'AI Assistant',
-  'home.emptyDesc': 'Ask me anything, or upload an Excel file for data analysis and report generation',
-  'home.uploadArea': 'Upload Excel file to generate report',
-  'home.uploadHint': 'Supports .xlsx, .xls, .csv',
-  'home.inputPlaceholder': 'Type a message, or upload an Excel file...',
-  'home.inputPlaceholderFile': 'Enter your analysis requirement...',
+  'home.emptyTitle': 'AI Travel Planner',
+  'home.emptyDesc': 'Enter a destination to get detailed travel guides and vintage posters',
+  'home.inputPlaceholder': 'e.g. "3 days in Hangzhou"',
   'home.send': 'Send',
-  'home.generating': 'Generating...',
+  'home.generating': 'Planning...',
   'home.thinking': 'Thinking...',
-  'home.download': 'Download Image',
-  'home.uploadFailed': 'Upload failed, please try again',
-  'home.generateFailed': 'Report generation failed, please try again',
-  'home.chatFailed': 'Chat service temporarily unavailable',
+  'home.download': 'Download Poster',
+  'home.chatFailed': 'Service temporarily unavailable',
 
   // Report
   'report.creating': 'Creating generation task...',
@@ -79,6 +74,20 @@ export const en: Record<string, string> = {
   'settings.languageDesc': 'Change interface language',
   'settings.langZh': '中文',
   'settings.langEn': 'English',
+  'settings.font': 'Font',
+  'settings.fontSize': 'Font Size',
+  'settings.fontSizeDesc': 'Adjust text size across the app',
+  'settings.fontSmall': 'Small',
+  'settings.fontMedium': 'Medium',
+  'settings.fontLarge': 'Large',
+  'settings.codeFont': 'Code Font',
+  'settings.codeFontDesc': 'Monospace font for code blocks',
+  'settings.codeFontMono': 'Monospace',
+  'settings.codeFontSystem': 'System Font',
+  'settings.density': 'Message Density',
+  'settings.densityDesc': 'Control spacing in message lists',
+  'settings.densityComfortable': 'Comfortable',
+  'settings.densityCompact': 'Compact',
 
   'settings.apiConfig': 'API Configuration',
   'settings.apiKey': 'API Key',

@@ -1,5 +1,8 @@
 """AI 聊天 API"""
+import asyncio
 import httpx
+import logging
+import time
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -9,9 +12,24 @@ from app.models import get_db
 from app.services.chat_history_service import save_chat, get_chat_list, get_chat_detail, delete_chat
 from app.utils.common import create_camel_response
 
+logger = logging.getLogger("app.api.chat")
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 settings = get_settings()
+
+# ── 重试配置 ──
+MAX_RETRIES = 3
+RETRY_DELAYS = [1, 2, 4]
+
+def _is_retryable_http_error(e: Exception) -> bool:
+    """判断 HTTP 错误是否可重试"""
+    if isinstance(e, httpx.HTTPStatusError):
+        return e.response.status_code in (429,) or e.response.status_code >= 500
+    if isinstance(e, (httpx.TimeoutException, httpx.ConnectError,
+                      httpx.RemoteProtocolError, httpx.StreamError,
+                      httpx.ReadTimeout, httpx.WriteTimeout)):
+        return True
+    return False
 
 
 class ChatRequest(BaseModel):
@@ -45,28 +63,84 @@ async def chat(request: ChatRequest, db: Session = Depends(get_db)):
         "max_tokens": 2000,
     }
 
-    try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(url, headers=headers, json=data)
-            response.raise_for_status()
-            result = response.json()
+    logger.info(
+        "📤 [自由对话] 开始请求 | message_preview=%s model=%s",
+        request.message[:50] + ("..." if len(request.message) > 50 else ""),
+        settings.SENSENOVA_PROMPT_MODEL,
+    )
+    logger.debug(
+        "📦 [自由对话] 完整请求 | message=%s system_prompt=%s",
+        request.message, system_prompt[:100] + "...",
+    )
+
+    start_time = time.time()
+
+    # ── 重试循环：最多 MAX_RETRIES 次 ──
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                response = await client.post(url, headers=headers, json=data)
+                response.raise_for_status()
+                result = response.json()
+
+            elapsed = time.time() - start_time
+            logger.info(
+                "📡 [自由对话] 响应收到 (attempt %d/%d) | status=%s elapsed=%.2fs",
+                attempt, MAX_RETRIES, response.status_code, elapsed,
+            )
 
             if "choices" in result and len(result["choices"]) > 0:
                 reply = result["choices"][0]["message"]["content"]
+                logger.info(
+                    "✅ [自由对话] 完成 (attempt %d/%d) | reply_len=%d chars elapsed=%.2fs",
+                    attempt, MAX_RETRIES, len(reply), elapsed,
+                )
+                logger.debug(
+                    "📦 [自由对话] 回复内容 | reply=%s",
+                    reply[:200] + ("..." if len(reply) > 200 else ""),
+                )
 
                 # 保存聊天记录
                 try:
                     save_chat(db=db, user_message=request.message, ai_reply=reply)
                 except Exception as e:
-                    print(f"保存聊天记录失败: {e}")
+                    logger.warning("⚠️ [自由对话] 保存聊天记录失败 | error=%s", e)
 
                 return create_camel_response({"reply": reply})
             else:
+                logger.error(
+                    "❌ [自由对话] 返回格式异常 (attempt %d/%d) | result=%s elapsed=%.2fs",
+                    attempt, MAX_RETRIES, result, elapsed,
+                )
                 raise HTTPException(status_code=500, detail="AI 返回格式错误")
-    except httpx.HTTPStatusError as e:
-        raise HTTPException(status_code=502, detail=f"AI 服务调用失败: {e.response.status_code}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"聊天服务异常: {str(e)}")
+
+        except Exception as e:
+            elapsed = time.time() - start_time
+            retryable = _is_retryable_http_error(e)
+
+            if retryable and attempt < MAX_RETRIES:
+                delay = RETRY_DELAYS[attempt - 1]
+                logger.warning(
+                    "⚠️ [自由对话] 第%d次失败, %ds后重试 (attempt %d/%d) | error=%s elapsed=%.2fs",
+                    attempt, delay, attempt, MAX_RETRIES, str(e), elapsed,
+                )
+                await asyncio.sleep(delay)
+            else:
+                reason = "不可重试错误" if not retryable else "全部重试耗尽"
+                if isinstance(e, httpx.HTTPStatusError):
+                    logger.error(
+                        "❌ [自由对话] HTTP错误 | status=%s response=%s elapsed=%.2fs",
+                        e.response.status_code, e.response.text[:200], elapsed,
+                    )
+                    raise HTTPException(
+                        status_code=502,
+                        detail=f"AI 服务调用失败 ({e.response.status_code})",
+                    )
+                logger.error(
+                    "❌ [自由对话] %s (attempt %d/%d) | error=%s elapsed=%.2fs",
+                    reason, attempt, MAX_RETRIES, str(e), elapsed,
+                )
+                raise HTTPException(status_code=500, detail=f"聊天服务异常: {str(e)}")
 
 
 # ── 聊天历史记录 ──

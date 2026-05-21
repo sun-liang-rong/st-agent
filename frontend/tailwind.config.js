@@ -20,7 +20,25 @@ export default {
           900: '#581c87',
           950: '#3b0764',
         },
-      }
+      },
+      animation: {
+        'skeleton': 'skeleton 1.8s ease-in-out infinite',
+        'slide-in': 'slideIn 0.3s ease-out forwards',
+        'fade-in': 'fadeIn 0.2s ease forwards',
+      },
+      keyframes: {
+        skeleton: {
+          '0%': { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+      },
+      backgroundImage: {
+        'skeleton-gradient': 'linear-gradient(90deg, transparent 0%, rgba(148, 163, 184, 0.1) 50%, transparent 100%)',
+      },
     },
   },
   plugins: [],

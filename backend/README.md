@@ -1,5 +1,25 @@
 # AI 报表生成平台 - 后端
 
+## 虚拟环境 基础命令（推荐）
+
+安装虚拟环境
+
+```bash
+python -m venv agent
+```
+
+激活虚拟环境
+
+```bash
+agent\Scripts\activate
+```
+
+退出虚拟环境
+
+```bash
+deactivate
+```
+
 ## 项目结构
 
 ```

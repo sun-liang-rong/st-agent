@@ -209,7 +209,7 @@ async def suggest_analysis(file_id: str):
 
         suggestion = ""
         try:
-            async with httpx.AsyncClient(timeout=30.0, proxy=None) as client:
+            async with httpx.AsyncClient(timeout=30.0, mounts={"all://": httpx.AsyncHTTPTransport()}) as client:
                 response = await client.post(url, headers=headers, json=data)
                 response.raise_for_status()
                 result = response.json()

@@ -116,10 +116,10 @@ function formatDate(dateString: string): string {
   })
 }
 
-function parsePrefixedId(prefixed: string) {
-  const sep = prefixed.indexOf('-')
-  return { prefix: prefixed.slice(0, sep), rawId: prefixed.slice(sep + 1) }
-}
+// function parsePrefixedId(prefixed: string) {
+//   const sep = prefixed.indexOf('-')
+//   return { prefix: prefixed.slice(0, sep), rawId: prefixed.slice(sep + 1) }
+// }
 
 function openGroup(group: HistoryGroup) {
   // 传递组内所有记录，确保完整会话展示
@@ -129,7 +129,7 @@ function openGroup(group: HistoryGroup) {
       rawId: item.rawId
     })))
   )
-  router.push({ path: '/', query: { historyItems: itemsParam } })
+  router.push({ path: '/app', query: { historyItems: itemsParam } })
 }
 
 function deleteGroup(group: HistoryGroup) {

@@ -1,4 +1,4 @@
-"""报表生成 API"""
+﻿"""报表生成 API"""
 import os
 import uuid
 import glob
@@ -38,7 +38,7 @@ def _build_file_data(file_path: str) -> str:
         col_data = df[col]
         if pd.api.types.is_numeric_dtype(col_data):
             clean = col_data.dropna()
-            info = f"  - {col} (数值)"
+            info = f"  - {col} (数值"
             if len(clean) > 0:
                 info += f" [min={clean.min():.2f}, max={clean.max():.2f}, mean={clean.mean():.2f}, sum={clean.sum():.2f}]"
             col_summaries.append(info)
@@ -47,7 +47,7 @@ def _build_file_data(file_path: str) -> str:
         else:
             unique = col_data.nunique()
             top_values = col_data.value_counts().head(10).index.tolist()
-            col_summaries.append(f"  - {col} (分类, {unique}个值) top: {top_values}")
+            col_summaries.append(f"  - {col} (分类, {unique}个值, top: {top_values})")
 
     # 取前 50 行数据样本
     sample = df.head(50).to_string(index=False)
@@ -161,7 +161,7 @@ class ConfirmRequest(BaseModel):
 
 @router.post("/{task_id}/confirm")
 async def confirm_dashboard(task_id: str, request: ConfirmRequest, db: Session = Depends(get_db)):
-    """阶段2：用户确认看板规格，保存到历史记录"""
+    """阶段2：用户确认看板规格，生成封面图并保存到历史记录"""
     try:
         task = get_task_result_data(task_id)
         if not task:
@@ -173,7 +173,40 @@ async def confirm_dashboard(task_id: str, request: ConfirmRequest, db: Session =
         matches = glob.glob(os.path.join(file_dir, f"{file_id}.*"))
         file_name = os.path.basename(matches[0]) if matches else "unknown"
 
-        # 保存历史记录
+        # 调用 U1 Fast 生成封面图
+        cover_path = None
+        image_url = ""
+        try:
+            await send_event(task_id, "progress", {
+                "step": 1, "total": 2,
+                "message": "正在生成封面图...", "status": "processing",
+            })
+            
+            cover_path = await aiservice.generate_dashboard_cover(
+                dashboard_spec=request.dashboard_spec,
+                file_name=file_name
+            )
+            
+            if cover_path:
+                # 转换为相对 URL
+                image_url = "/" + cover_path.replace("\\", "/")
+                await send_event(task_id, "progress", {
+                    "step": 2, "total": 2,
+                    "message": "封面图生成完成", "status": "completed",
+                })
+            else:
+                await send_event(task_id, "progress", {
+                    "step": 2, "total": 2,
+                    "message": "封面图生成跳过", "status": "completed",
+                })
+        except Exception as e:
+            print(f"封面图生成失败: {e}")
+            await send_event(task_id, "progress", {
+                "step": 2, "total": 2,
+                "message": "封面图生成失败，继续保存", "status": "completed",
+            })
+
+        # 保存历史记录（包含封面图）
         try:
             create_history(
                 db=db,
@@ -181,20 +214,24 @@ async def confirm_dashboard(task_id: str, request: ConfirmRequest, db: Session =
                 file_name=file_name,
                 user_prompt=task["user_prompt"],
                 generated_prompt="",
-                image_url="",
+                image_url=image_url,
                 dashboard_spec=request.dashboard_spec,
             )
         except Exception as e:
             print(f"保存历史记录失败: {e}")
 
         update_task_status(task_id, "completed", 3, "生成完成",
-                           extra={"dashboard_spec": request.dashboard_spec})
+                           extra={
+                               "dashboard_spec": request.dashboard_spec,
+                               "image_url": image_url
+                           })
         cleanup_task(task_id)
 
         return create_camel_response({
             "task_id": task_id,
             "status": "completed",
             "dashboard_spec": request.dashboard_spec,
+            "image_url": image_url,
         })
 
     except HTTPException:

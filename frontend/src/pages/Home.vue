@@ -1,781 +1,318 @@
 <template>
-  <div class="h-full flex flex-col bg-gray-50 dark:bg-slate-900">
+  <div class="flex flex-col h-full bg-gradient-to-b from-gray-50 to-white dark:from-slate-900 dark:to-slate-800">
     <!-- 消息列表 -->
-    <div ref="messageContainer" class="flex-1 overflow-y-auto p-6 space-y-6">
-      <!-- 空状态：无消息、无预览 -->
-      <div v-if="messages.length === 0 && !previewData" class="flex flex-col items-center justify-center h-full text-center px-6 animate-slide-in">
+    <div ref="messageContainer" class="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+      <!-- 空状态 -->
+      <div v-if="messages.length === 0" class="flex flex-col items-center justify-center h-full text-center px-6">
         <div class="relative mb-6">
-          <div class="w-20 h-20 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/40 dark:to-primary-800/30 rounded-2xl flex items-center justify-center shadow-inner">
-            <svg class="w-10 h-10 text-primary-500 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-            </svg>
-          </div>
-          <!-- 装饰小圆点 -->
-          <div class="absolute -top-1 -right-1 w-6 h-6 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center animate-pulse">
-            <svg class="w-3 h-3 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z"/>
+          <div class="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 rounded-2xl shadow-inner">
+            <svg class="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
             </svg>
           </div>
         </div>
-        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">{{ tt('home.emptyTitle') }}</h2>
-        <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-md">{{ tt('home.emptyDesc') }}</p>
-        
-        <!-- 上传按钮 -->
-        <div
-          @click="triggerUpload"
-          @dragover.prevent="isDragging = true"
-          @dragleave.prevent="isDragging = false"
-          @drop.prevent="handleDrop"
-          class="w-full max-w-lg cursor-pointer"
-        >
-          <div
-            class="border-2 border-dashed rounded-xl p-12 transition-all duration-300 group"
-            :class="[
-              isDragging
-                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 scale-[1.02] shadow-lg shadow-primary-200 dark:shadow-primary-900/30'
-                : 'border-gray-300 dark:border-slate-600 hover:border-primary-500 dark:hover:border-primary-400 hover:bg-gray-50/50 dark:hover:bg-slate-800/30 hover:shadow-md',
-              isUploading ? 'opacity-60 pointer-events-none' : ''
-            ]"
-          >
-            <!-- 上传进度环 -->
-            <div v-if="isUploading" class="flex flex-col items-center">
-              <svg class="w-14 h-14 text-primary-500 animate-spin mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-              </svg>
-              <p class="text-primary-600 dark:text-primary-400 font-medium">正在上传解析...</p>
-            </div>
-            <!-- 拖拽/点击状态 -->
-            <template v-else>
-              <svg class="w-12 h-12 mx-auto mb-4 transition-colors" :class="isDragging ? 'text-primary-500' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 0 1-.88-7.903A5 5 0 1 1 15.9 6L16 6a5 5 0 0 1 1 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-              </svg>
-              <p class="mb-1 transition-colors" :class="isDragging ? 'text-primary-600 dark:text-primary-400 font-medium' : 'text-gray-600 dark:text-gray-300'">
-                {{ isDragging ? '松开以开始上传' : '上传 Excel 文件生成报表' }}
-              </p>
-              <p class="text-sm text-gray-400">支持 .xlsx, .xls, .csv 格式</p>
-            </template>
-          </div>
-          <input
-            ref="fileInput"
-            type="file"
-            @change="handleFileChange"
-            accept=".xlsx,.xls,.csv"
-            class="hidden"
-          />
-        </div>
-      </div>
-
-      <!-- 数据预览 + 配置面板 -->
-      <div v-else-if="previewData && messages.length === 0" class="flex-1 overflow-y-auto">
-        <div class="max-w-4xl mx-auto py-6 px-6 space-y-6">
-          <!-- 预览中加载 -->
-          <div v-if="previewLoading" class="flex flex-col items-center justify-center py-20">
-            <svg class="w-10 h-10 text-primary-500 animate-spin mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-            <p class="text-gray-500 dark:text-gray-400">正在加载数据预览...</p>
-          </div>
-          <!-- 预览 + 配置 -->
-          <template v-else>
-            <DataPreview
-              :preview="previewData"
-              @update:selectedColumns="selectedColumns = $event"
-            />
-            <ReportConfig
-              :currentFile="currentFile"
-              :selectedColumns="selectedColumns"
-              :defaultPrompt="aiSuggestion"
-              @generate="generateFromConfig"
-            />
-          </template>
+        <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">AI 旅游攻略</h2>
+        <p class="text-gray-500 dark:text-gray-400 max-w-md mb-8">输入目的地，获取详细的旅行攻略和精美海报</p>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-lg">
+          <button @click="quickSelect('杭州', 3, '经典游，美食')" class="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all text-left group">
+            <span class="text-2xl mb-1 block">🏯</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-emerald-600">杭州3日游</span>
+          </button>
+          <button @click="quickSelect('成都', 4, '美食，休闲')" class="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all text-left group">
+            <span class="text-2xl mb-1 block">🐼</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-emerald-600">成都4日游</span>
+          </button>
+          <button @click="quickSelect('大理', 5, '情侣游，自然风光')" class="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all text-left group">
+            <span class="text-2xl mb-1 block">🌊</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-emerald-600">大理5日游</span>
+          </button>
         </div>
       </div>
 
       <!-- 消息列表 -->
-      <div v-else class="max-w-4xl mx-auto space-y-6">
-        <div
-          v-for="message in messages"
-          :key="message.id"
-          class="flex gap-4 animate-slide-in"
-          :class="{ 'flex-row-reverse': message.role === 'user' }"
-        >
-          <!-- 头像 -->
-          <div
-            class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
-            :class="message.role === 'user' ? 'bg-primary-500' : 'bg-gray-200 dark:bg-slate-700'"
-          >
-            <svg v-if="message.role === 'user'" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z"/>
-            </svg>
-            <svg v-else class="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-            </svg>
+      <div v-for="msg in messages" :key="msg.id" class="flex gap-3 animate-slide-in" :class="{ 'flex-row-reverse': msg.role === 'user' }">
+        <!-- 头像 -->
+        <div class="flex items-center justify-center flex-shrink-0 w-9 h-9 rounded-full shadow-sm mt-1"
+          :class="msg.role === 'user' ? 'bg-emerald-500' : 'bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600'">
+          <svg v-if="msg.role === 'user'" class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z"/>
+          </svg>
+          <svg v-else class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+          </svg>
+        </div>
+
+        <!-- 消息内容 -->
+        <div class="max-w-[80%] min-w-0">
+          <div class="px-4 py-3 rounded-2xl shadow-sm"
+            :class="msg.role === 'user'
+              ? 'bg-emerald-500 text-white rounded-tr-sm'
+              : 'bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-slate-700/70 rounded-tl-sm'">
+            <!-- 用户消息纯文本 -->
+            <p v-if="msg.role === 'user'" class="whitespace-pre-wrap text-sm">{{ msg.content }}</p>
+            <!-- AI 消息：错误卡片 -->
+            <div v-else-if="msg.error" class="flex items-start gap-3">
+              <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-semibold text-red-700 dark:text-red-400">生成失败</p>
+                <p class="text-xs text-red-500/70 dark:text-red-400/60 mt-1 leading-relaxed">{{ msg.content }}</p>
+              </div>
+            </div>
+            <!-- AI 消息 Markdown（正常内容） -->
+            <div v-else class="prose prose-sm dark:prose-invert max-w-none prose-headings:text-gray-800 dark:prose-headings:text-gray-100 prose-a:text-emerald-600">
+              <MarkdownRenderer :content="msg.content" />
+            </div>
           </div>
 
-          <!-- 消息内容 -->
-          <div class="max-w-[75%] min-w-[120px] group/message">
-            <div
-              class="rounded-2xl px-4 py-3 overflow-hidden transition-all duration-200"
-              :class="message.role === 'user' 
-                ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-tr-sm shadow-sm shadow-primary-200 dark:shadow-primary-900/30' 
-                : 'bg-white dark:bg-slate-800 text-gray-800 dark:text-white border border-gray-100 dark:border-slate-700/70 rounded-tl-sm shadow-sm hover:shadow-md dark:hover:border-slate-600'"
-            >
-              <MarkdownRenderer v-if="message.content && message.role !== 'user'" :content="message.content" />
-              <p v-else-if="message.content" class="whitespace-pre-wrap">{{ message.content }}</p>
-              
-              <!-- 进度条 -->
-              <div v-if="message.progress" class="mt-4">
-                <div class="flex justify-between text-sm mb-2">
-                  <span>{{ message.progress.message }}</span>
-                  <span>{{ message.progress.step }}/{{ message.progress.total }}</span>
-                </div>
-                <div class="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
-                  <div
-                    class="h-full rounded-full bg-gradient-to-r from-primary-500 to-primary-400 transition-all duration-500 ease-out"
-                    :style="{ width: `${(message.progress.step / message.progress.total) * 100}%` }"
-                  ></div>
-                </div>
-              </div>
-              
-              <!-- 文件附件 -->
-              <div v-if="message.attachments && message.attachments.length > 0" class="mt-3 space-y-2">
-                <div
-                  v-for="file in message.attachments"
-                  :key="file.id"
-                  class="flex items-center gap-3 bg-gray-50 dark:bg-slate-700 rounded-lg p-3"
-                >
-                  <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
+          <!-- 🎯 旅行加载动画（趣味等待） -->
+          <div v-if="msg.loading" class="mt-3 px-1 animate-slide-in">
+            <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50 via-white to-emerald-50/30 dark:from-emerald-900/15 dark:via-slate-800 dark:to-emerald-900/5 border border-emerald-200/60 dark:border-emerald-700/30 shadow-sm">
+              <!-- 流光背景 -->
+              <div class="absolute inset-0 bg-gradient-animate opacity-40 dark:opacity-20"></div>
+              <div class="relative p-3 flex items-center gap-3">
+                <!-- 左侧动画图标组 -->
+                <div class="relative w-11 h-11 flex items-center justify-center shrink-0">
+                  <!-- 地图定位针 -->
+                  <svg class="absolute w-6 h-6 text-emerald-400 animate-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <circle cx="12" cy="10" r="3" fill="currentColor" class="opacity-60"/>
                   </svg>
-                  <div class="flex-1 min-w-0">
-                    <p class="font-medium text-gray-700 dark:text-gray-300 truncate">{{ file.name }}</p>
-                    <p class="text-sm text-gray-400">{{ formatFileSize(file.size) }}</p>
+                  <!-- 旋转罗盘 -->
+                  <svg class="absolute w-9 h-9 text-emerald-400/60 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" class="opacity-20" />
+                    <path d="M12 2 L12 6 M12 18 L12 22 M2 12 L6 12 M18 12 L22 12" stroke-width="2" class="opacity-30" />
+                    <polygon points="12,4 14,12 12,14 10,12" fill="currentColor" class="origin-center animate-compass" />
+                  </svg>
+                  <!-- 纸飞机 -->
+                  <svg class="absolute w-4 h-4 text-emerald-500 -top-0.5 -right-0.5 animate-plane" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M21 3L3 10.5L11 13L13.5 21L21 3Z" />
+                  </svg>
+                </div>
+                <!-- 右侧动态文字 -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">AI 旅行规划师</span>
+                    <span class="flex gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:0s" />
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:0.15s" />
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:0.3s" />
+                    </span>
+                  </div>
+                  <p class="text-xs text-emerald-500/70 dark:text-emerald-400/60 mt-0.5 animate-thinking-text">{{ loadingText }}</p>
+                  <!-- 微型进度条 -->
+                  <div class="mt-1.5 h-0.5 bg-emerald-200/40 dark:bg-emerald-700/30 rounded-full overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full animate-loading-bar"></div>
                   </div>
                 </div>
               </div>
-              
-              <!-- 生成的图片 -->
-              <div v-if="message.imageUrl" class="mt-4">
-                <img
-                  :src="message.imageUrl"
-                  alt="Generated Report"
-                  class="rounded-lg max-w-full shadow-lg"
-                />
-              </div>
+            </div>
+          </div>
 
-              <div v-if="message.dashboardSpec && message.phase === 'complete'" class="mt-4">
-                <DashboardRenderer :spec="message.dashboardSpec" />
-              </div>
-
-              <!-- 提示词确认（两阶段模式） -->
-              <div v-if="message.phase === 'prompt' && message.dashboardSpec" class="mt-3 space-y-3">
-                <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3">
-                  <p class="text-sm font-medium text-gray-800 dark:text-gray-200">📊 看板方案已生成</p>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">AI 生成了以下看板配置，你可以编辑后确认渲染</p>
+          <!-- 图片加载占位（趣味动画） -->
+          <div v-if="msg.imageLoading" class="mt-3 animate-slide-in">
+            <div class="w-full rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm">
+              <div class="aspect-video relative bg-gradient-to-br from-emerald-100 via-emerald-50 to-teal-100 dark:from-emerald-900/30 dark:via-slate-800 dark:to-teal-900/20 flex flex-col items-center justify-center gap-3 overflow-hidden">
+                <!-- 脉冲环 -->
+                <div class="absolute inset-0">
+                  <div class="absolute inset-0 animate-ping-slow rounded-full bg-emerald-400/5 dark:bg-emerald-500/5" style="top:30%; left:30%; width:40%; height:40%"></div>
+                  <div class="absolute inset-0 animate-ping-slower rounded-full bg-emerald-400/5 dark:bg-emerald-500/5" style="top:20%; left:20%; width:60%; height:60%"></div>
                 </div>
-                <DashboardRenderer :spec="message.dashboardSpec" />
-                <details class="bg-gray-50 dark:bg-slate-700/30 rounded-lg border border-gray-200 dark:border-slate-600">
-                  <summary class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-700/50 rounded-lg transition-colors">编辑 JSON 配置</summary>
-                  <div class="px-4 pb-4">
-                    <textarea :value="JSON.stringify(editingSpec, null, 2)" @input="onSpecEdit($event)" rows="12" class="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-lg text-xs text-gray-800 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-primary-500/40 transition-all resize-y" placeholder="看板 JSON 配置..." :disabled="isPhase2Loading"></textarea>
+                <!-- 图标组 -->
+                <div class="relative flex items-center gap-4">
+                  <svg class="w-7 h-7 text-emerald-400/70 animate-float" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.41a2.25 2.25 0 013.182 0l2.909 2.91m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+                  </svg>
+                  <svg class="w-7 h-7 text-emerald-400/50 animate-float-delayed" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/>
+                  </svg>
+                  <svg class="w-7 h-7 text-emerald-400/60 animate-float" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h17.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125z"/>
+                  </svg>
+                </div>
+                <!-- 文字 -->
+                <div class="relative text-center">
+                  <div class="flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4 text-emerald-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span class="text-sm font-medium text-emerald-600/70 dark:text-emerald-400/70">正在绘制精美海报...</span>
                   </div>
-                </details>
-                <div class="flex gap-2">
-                  <button @click="confirmGenerate(message)" :disabled="isPhase2Loading" class="flex-1 py-2.5 px-4 bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-700 hover:to-primary-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-medium shadow-lg shadow-primary-200 dark:shadow-primary-900/30 transition-all duration-200 flex items-center justify-center gap-2">
-                    <svg v-if="isPhase2Loading" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    {{ isPhase2Loading ? '渲染中...' : '✅ 确认渲染看板' }}
-                  </button>
-                  <button @click="cancelAndRetry(message)" :disabled="isPhase2Loading" class="py-2.5 px-4 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all">🔄 重新分析</button>
                 </div>
+                <!-- 底部的渐变流光条 -->
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent animate-shimmer-line"></div>
               </div>
+            </div>
+          </div>
+
+          <!-- 生成的图片（缩略图） -->
+          <div v-if="msg.imageUrl" class="mt-3">
+            <div class="relative group inline-block cursor-pointer max-w-[220px]" @click="openPreview(msg.imageUrl!)">
+              <img :src="msg.imageUrl" alt="目的地海报" class="w-full rounded-lg shadow-md border border-gray-200 dark:border-slate-700 hover:opacity-90 transition-opacity" />
+              <!-- 悬停遮罩 -->
+              <div class="absolute inset-0 rounded-lg bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                <svg class="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 图片生成失败提示 -->
+          <div v-if="msg.imageError" class="mt-3 animate-slide-in">
+            <div class="rounded-xl border border-amber-200/70 dark:border-amber-700/30 bg-amber-50/60 dark:bg-amber-900/10 p-3 flex items-center gap-2.5">
+              <div class="flex-shrink-0 w-7 h-7 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+              </div>
+              <p class="text-xs text-amber-600/80 dark:text-amber-400/70">海报生成失败，攻略文本已可用</p>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 底部输入区域（渐变分隔线） -->
-    <div class="relative bg-white dark:bg-slate-800 px-4 pt-1">
-      <!-- 渐变分隔线 -->
-      <div class="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-slate-600 to-transparent"></div>
-      <div class="max-w-4xl mx-auto py-3 space-y-3">
-        <!-- 已上传的文件 -->
-        <div v-if="currentFile" class="flex items-center gap-3 bg-gradient-to-r from-primary-50 to-primary-50/30 dark:from-primary-900/15 dark:to-slate-800 border border-primary-100 dark:border-primary-900/30 rounded-xl p-3 group/chip transition-all duration-200 hover:shadow-sm">
-          <div class="w-9 h-9 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center shrink-0">
-            <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
-            </svg>
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{{ currentFile.fileName }}</p>
-            <p class="text-xs text-gray-400">{{ currentFile.sheets.length }} 个工作簿 · {{ currentFile.metadata.totalRows }} 行数据</p>
-          </div>
-          <button @click="removeFile" class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all opacity-0 group-hover/chip:opacity-100">
+    <!-- ── 大图预览模态框 ── -->
+    <div v-if="previewImageUrl" class="fixed inset-0 z-[9999] bg-black/70 dark:bg-black/80 flex items-center justify-center p-4 md:p-8 backdrop-blur-sm" @click="closePreview">
+      <div class="relative max-w-5xl max-h-[90vh] w-full flex flex-col items-center" @click.stop>
+        <!-- 关闭按钮 -->
+        <button @click="closePreview" class="absolute -top-10 right-0 text-white/80 hover:text-white transition-colors p-1">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+        <!-- 大图 -->
+        <img :src="previewImageUrl" alt="目的地海报大图" class="max-w-full max-h-[80vh] rounded-xl shadow-2xl" />
+        <!-- 操作栏 -->
+        <div class="flex items-center gap-3 mt-4">
+          <button @click="downloadImage(previewImageUrl)" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-medium transition-all backdrop-blur-sm border border-white/20 hover:border-white/40">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
+            下载海报
           </button>
         </div>
+      </div>
+    </div>
 
-        <!-- 输入框 -->
-        <div class="flex gap-2">
+    <!-- 底部输入区 -->
+    <div class="border-t border-gray-100 dark:border-slate-700/50 bg-white dark:bg-slate-800/80 backdrop-blur-sm">
+      <div class="max-w-3xl mx-auto px-4 py-3">
+        <div class="flex gap-2 items-end">
           <div class="flex-1 relative">
-            <input
-              v-model="inputMessage"
-              @keyup.enter="handleSend"
-              :placeholder="currentFile ? '输入你的分析需求...' : '输入消息，或上传 Excel 文件分析...'"
-              class="w-full bg-gray-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-xl px-4 py-3 pr-12 text-sm text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 focus:bg-white dark:focus:bg-slate-700 transition-all shadow-sm"
-              :disabled="loading"
-            />
-            <button
-              @click="triggerUpload"
-              class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-gray-400 hover:text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-all"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 0 1-.88-7.903A5 5 0 1 1 15.9 6L16 6a5 5 0 0 1 1 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-              </svg>
-            </button>
-            <input
-              ref="fileInput"
-              type="file"
-              @change="handleFileChange"
-              accept=".xlsx,.xls,.csv"
-              class="hidden"
+            <textarea
+              v-model="inputText"
+              @keydown.enter.exact="handleSend"
+              placeholder="输入目的地，如「杭州3日游攻略」"
+              rows="2"
+              class="w-full px-4 py-3 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 dark:focus:border-emerald-500 transition-all"
+              :disabled="isLoading"
             />
           </div>
           <button
             @click="handleSend"
-            :disabled="!inputMessage.trim() || loading"
-            class="px-6 py-3 bg-primary-500 hover:bg-primary-600 active:scale-95 active:bg-primary-700 disabled:bg-gray-300 disabled:active:scale-100 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg disabled:hover:translate-y-0 disabled:hover:shadow-none flex items-center gap-2"
+            :disabled="!inputText.trim() || isLoading"
+            class="px-5 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-300 dark:disabled:from-slate-600 dark:disabled:to-slate-600 disabled:cursor-not-allowed text-white rounded-2xl font-medium transition-all duration-200 hover:shadow-lg hover:shadow-emerald-200/50 dark:hover:shadow-emerald-900/30 flex items-center gap-2 active:scale-95"
           >
-            <svg v-if="loading" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg v-if="isLoading" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
             </svg>
             <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
             </svg>
-            {{ loading ? '生成中...' : '发送' }}
           </button>
         </div>
+        <p class="text-[11px] text-gray-400 dark:text-slate-500 mt-1.5 text-center">
+          AI 生成仅供参考 · 出行前请核实最新信息
+        </p>
       </div>
     </div>
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { ref, nextTick, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useAppStore } from '@/stores/app'
-import { apiService } from '@/services/api'
-import { t } from '@/i18n'
-import type { Message, FileAttachment, UploadResponse, PreviewResponse, ChartType } from '@/types'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
-import DataPreview from '@/components/DataPreview.vue'
-import ReportConfig from '@/components/ReportConfig.vue'
-import DashboardRenderer from '@/components/DashboardRenderer.vue'
-import type { DashboardSpec } from '@/types'
+import { apiService } from '@/services/api'
 
-const appStore = useAppStore()
-const tt = (key: string) => t(key, appStore.locale)
+interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: number
+  imageUrl?: string
+  loading?: boolean
+  imageLoading?: boolean
+  error?: boolean
+  imageError?: boolean
+}
 
-const fileInput = ref<HTMLInputElement | null>(null)
-const inputMessage = ref('')
-const uploadedFileData = ref<UploadResponse | null>(null)
-const currentTaskId = ref<string | null>(null)
-const eventSource = ref<EventSource | null>(null)
+const messages = ref<ChatMessage[]>([])
+const inputText = ref('')
+const isLoading = ref(false)
 const messageContainer = ref<HTMLElement | null>(null)
-const isDragging = ref(false)
-const isUploading = ref(false)
 
-// ── 数据预览 & 用户配置状态 ──
-const previewData = ref<PreviewResponse | null>(null)
-const previewLoading = ref(false)
-const selectedColumns = ref<string[]>([])
+// ── 大图预览 ──
+const previewImageUrl = ref<string | null>(null)
 
-// ── AI 建议提示词 ──
-const aiSuggestion = ref<string>('')
+function openPreview(url: string) {
+  previewImageUrl.value = url
+  document.body.style.overflow = 'hidden'
+}
 
-// ── 两阶段模式状态 ──
-const editingPrompts = ref<Record<string, string>>({})
-const isPhase2Loading = ref(false)
-const lastChartType = ref<ChartType>('bar')
-const editingSpec = ref<DashboardSpec | null>(null)
+function closePreview() {
+  previewImageUrl.value = null
+  document.body.style.overflow = ''
+}
 
-const route = useRoute()
+function downloadImage(url: string) {
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `旅行海报-${Date.now()}.png`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
 
-const messages = computed(() => appStore.messages)
-const currentFile = computed(() => appStore.currentFile)
-const loading = computed(() => appStore.loading)
+// ── 加载时循环显示的趣味文案 ──
+const loadingTexts = [
+  '🧭 在地图上寻找方向...',
+  '🍜 搜索当地美食中...',
+  '✈️ 规划最优路线中...',
+  '🏨 筛选特色住宿...',
+  '🎯 挖掘隐藏宝藏景点...',
+  '🌤️ 查询天气预报...',
+  '📸 寻找最佳拍照点...',
+  '🎒 打包行李建议中...',
+  '🚗 研究交通方式...',
+  '💡 获取本地人推荐...',
+]
+const loadingText = ref('🧭 在地图上寻找方向...')
+let loadingTextTimer: ReturnType<typeof setInterval> | null = null
 
-// ── 加载单条历史记录（兼容旧格式） ──
-async function loadHistory(type: string, id: string) {
-  appStore.clearMessages()
-  try {
-    if (type === 'chat') {
-      const res: any = await apiService.getChatHistoryDetail(id)
-      const d = res as any
-      appStore.addMessage({ id: 'hist-user', role: 'user', content: d.userMessage || '', timestamp: Date.now() })
-      appStore.addMessage({ id: 'hist-ai', role: 'assistant', content: d.aiReply || '', timestamp: Date.now() + 1 })
-    } else {
-      const res: any = await apiService.getHistoryDetail(id)
-      const d = res as any
-      appStore.addMessage({ id: 'hist-user', role: 'user', content: d.userPrompt || '', timestamp: Date.now() })
-      if (d.dashboardSpec) {
-        appStore.addMessage({
-          id: 'hist-ai', role: 'assistant', content: '',
-          dashboardSpec: d.dashboardSpec, phase: 'complete', timestamp: Date.now() + 1,
-        })
-      }
-    }
-  } catch (e) {
-    console.error('加载历史记录失败:', e)
+function startLoadingText() {
+  let i = 0
+  loadingText.value = loadingTexts[0]
+  loadingTextTimer = setInterval(() => {
+    i = (i + 1) % loadingTexts.length
+    loadingText.value = loadingTexts[i]
+  }, 2500)
+}
+
+function stopLoadingText() {
+  if (loadingTextTimer) {
+    clearInterval(loadingTextTimer)
+    loadingTextTimer = null
   }
 }
 
-// ── 加载多条历史记录（完整会话） ──
-async function loadHistoryItems(items: { type: string; rawId: string }[]) {
-  appStore.clearMessages()
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i]
-    const baseTime = Date.now() + i * 100 // 每批消息间隔 100ms 保证顺序
-    try {
-      if (item.type === 'chat') {
-        const res: any = await apiService.getChatHistoryDetail(item.rawId)
-        const d = res as any
-        appStore.addMessage({
-          id: `hist-chat-${item.rawId}-user`,
-          role: 'user',
-          content: d.userMessage || '',
-          timestamp: baseTime,
-        })
-        appStore.addMessage({
-          id: `hist-chat-${item.rawId}-ai`,
-          role: 'assistant',
-          content: d.aiReply || '',
-          timestamp: baseTime + 1,
-        })
-      } else {
-        const res: any = await apiService.getHistoryDetail(item.rawId)
-        const d = res as any
-        appStore.addMessage({
-          id: `hist-report-${item.rawId}-user`,
-          role: 'user',
-          content: d.userPrompt || '',
-          timestamp: baseTime,
-        })
-        if (d.dashboardSpec) {
-          appStore.addMessage({
-            id: `hist-report-${item.rawId}-ai`,
-            role: 'assistant',
-            content: '',
-            dashboardSpec: d.dashboardSpec,
-            phase: 'complete',
-            timestamp: baseTime + 1,
-          })
-        }
-      }
-    } catch (e) {
-      console.error(`加载历史记录失败 (${item.type}/${item.rawId}):`, e)
-    }
-  }
-}
-
-// ── 从路由 query 加载历史记录 ──
-async function loadHistoryFromQuery(query: any) {
-  const historyItems = query.historyItems as string
-  if (historyItems) {
-    try {
-      const items: { type: string; rawId: string }[] = JSON.parse(decodeURIComponent(historyItems))
-      await loadHistoryItems(items)
-    } catch (e) {
-      console.error('解析历史记录参数失败:', e)
-    }
-  } else {
-    // 兼容旧格式：单条记录
-    const historyId = query.historyId as string
-    if (historyId) {
-      const historyType = (query.historyType as string) || 'chat'
-      await loadHistory(historyType, historyId)
-    }
-  }
-}
-
-onMounted(() => {
-  loadHistoryFromQuery(route.query)
-})
-
-// 同路由 query 变化时重新加载（比如从历史页连续点击不同会话）
-watch(() => route.query, (query) => {
-  loadHistoryFromQuery(query)
-}, { deep: true })
-
-function triggerUpload() {
-  fileInput.value?.click()
-}
-
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
-}
-
-function handleDrop(event: DragEvent) {
-  const files = event.dataTransfer?.files
-  if (files && files.length > 0) {
-    const file = files[0]
-    const allowedExts = ['.xlsx', '.xls', '.csv']
-    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
-    if (!allowedExts.includes(ext)) return
-    handleFile(file)
-  }
-}
-
-function handleFileChange(event: Event) {
-  const target = event.target as HTMLInputElement
-  const files = target.files
-  if (files && files.length > 0) {
-    handleFile(files[0])
-  }
-}
-
-async function handleFile(file: File) {
-  isDragging.value = false
-  isUploading.value = true
-
-  // 上传文件到后端
-  try {
-    const uploadResponse = await apiService.uploadFile(file)
-    isUploading.value = false
-
-    uploadedFileData.value = uploadResponse
-    
-    // 设置当前文件
-    const mockFile = {
-      fileId: uploadResponse.fileId,
-      fileName: uploadResponse.fileName,
-      sheets: uploadResponse.sheets.map(sheet => ({
-        name: sheet.name,
-        headers: [],
-        rows: [],
-        summary: {
-          numericColumns: [],
-          categoricalColumns: [],
-          dateColumns: []
-        }
-      })),
-      metadata: {
-        totalRows: uploadResponse.metadata.totalRows,
-        totalCols: uploadResponse.metadata.totalCols,
-        sheetCount: uploadResponse.sheets.length
-      }
-    }
-    appStore.setCurrentFile(mockFile)
-
-    // ── 拉取数据预览 + AI 建议（并行） ──
-    previewLoading.value = true
-    try {
-      const [preview, suggestRes] = await Promise.all([
-        apiService.getFilePreview(uploadResponse.fileId),
-        apiService.suggestPrompt(uploadResponse.fileId).catch(e => {
-          console.error('获取建议提示词失败:', e)
-          return { suggestion: '' }
-        }),
-      ])
-      previewData.value = preview
-      selectedColumns.value = [...preview.columnNames]
-      aiSuggestion.value = suggestRes.suggestion
-    } catch (e) {
-      console.error('获取数据预览失败:', e)
-    } finally {
-      previewLoading.value = false
-    }
-    
-  } catch (error) {
-    console.error('Upload failed:', error)
-    isUploading.value = false
-    const errorMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      role: 'assistant',
-      content: '文件上传失败，请重试',
-      timestamp: Date.now()
-    }
-    appStore.addMessage(errorMessage)
-  }
-}
-
-function removeFile() {
-  appStore.resetConversation()
-  uploadedFileData.value = null
-  previewData.value = null
-  selectedColumns.value = []
-}
-
-// ── 从配置面板触发生成 ──
-async function generateFromConfig(config: {
-  userPrompt: string
-  selectedColumns: string[]
-  chartType: ChartType
-  chartTitle: string
-}) {
-  if (!uploadedFileData.value) return
-
-  lastChartType.value = config.chartType
-
-  // 隐藏预览配置区
-  previewData.value = null
-
-  // 添加用户消息
-  const userMessage: Message = {
-    id: Date.now().toString(),
-    role: 'user',
-    content: config.userPrompt,
-    timestamp: Date.now()
-  }
-  appStore.addMessage(userMessage)
-
-  // 调用阶段1：分析数据 + 生成提示词
-  await generatePhase1(
-    uploadedFileData.value.fileId,
-    config.userPrompt,
-    config.selectedColumns,
-    config.chartType,
-    config.chartTitle,
-  )
-}
-
-async function handleSend() {
-  const text = inputMessage.value.trim()
-  if (!text || loading.value) return
-
-  // 添加用户消息
-  const userMessage: Message = {
-    id: Date.now().toString(),
-    role: 'user',
-    content: text,
-    timestamp: Date.now()
-  }
-  appStore.addMessage(userMessage)
-  inputMessage.value = ''
-
-  // 有文件 → 生成报表模式，无文件 → 聊天模式
-  if (currentFile.value && uploadedFileData.value) {
-    if (previewData.value) {
-      // 有预览数据时，带上当前的列选择
-      await generateFromConfig({
-        userPrompt: text,
-        selectedColumns: selectedColumns.value,
-        chartType: lastChartType.value,
-        chartTitle: '',
-      })
-    } else {
-      await generatePhase1(uploadedFileData.value.fileId, text)
-    }
-  } else {
-    await sendChat(text)
-  }
-}
-
-async function generatePhase1(
-  fileId: string,
-  userPrompt: string,
-  selectedColumns: string[] = [],
-  chartType: string = 'bar',
-  chartTitle: string = '',
-) {
-  appStore.setLoading(true)
-  try {
-    const thinkingMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      role: 'assistant',
-      content: '正在分析数据...',
-      timestamp: Date.now(),
-      progress: { step: 0, total: 3, message: '准备中...' }
-    }
-    appStore.addMessage(thinkingMessage)
-    const generateResponse = await apiService.generateReport({
-      fileId: fileId,
-      userPrompt: userPrompt,
-      selectedColumns: selectedColumns.length > 0 ? selectedColumns : undefined,
-      chartType: chartType,
-      chartTitle: chartTitle || undefined,
-    } as any)
-    currentTaskId.value = generateResponse.taskId
-    const dashboardSpec = generateResponse.dashboardSpec
-    connectSSE(generateResponse.taskId, thinkingMessage.id)
-    const idx = appStore.messages.findIndex(m => m.id === thinkingMessage.id)
-    if (idx > -1 && dashboardSpec) {
-      appStore.messages[idx] = {
-        ...appStore.messages[idx],
-        content: '',
-        progress: undefined,
-        phase: 'prompt',
-        dashboardSpec: dashboardSpec,
-      }
-      editingSpec.value = dashboardSpec
-    }
-    appStore.setLoading(false)
-  } catch (error) {
-    console.error('生成失败:', error)
-    const errorMessage: Message = {
-      id: (Date.now() + 2).toString(),
-      role: 'assistant',
-      content: '生成报表时出错，请重试',
-      timestamp: Date.now()
-    }
-    appStore.addMessage(errorMessage)
-    appStore.setLoading(false)
-    closeSSE()
-  }
-}
-
-
-async function confirmGenerate(message: Message) {
-  if (!editingSpec.value || !currentTaskId.value) return
-  isPhase2Loading.value = true
-  appStore.setLoading(true)
-  try {
-    const idx = appStore.messages.findIndex(m => m.id === message.id)
-    if (idx > -1) {
-      appStore.messages[idx] = {
-        ...appStore.messages[idx],
-        content: '',
-        phase: 'complete',
-        dashboardSpec: editingSpec.value,
-        progress: undefined,
-      }
-    }
-    await apiService.confirmDashboard(currentTaskId.value, editingSpec.value)
-  } catch (error) {
-    console.error('保存失败:', error)
-    const idx = appStore.messages.findIndex(m => m.id === message.id)
-    if (idx > -1) {
-      appStore.messages[idx] = {
-        ...appStore.messages[idx],
-        content: '保存失败，请重试',
-        progress: undefined,
-      }
-    }
-  } finally {
-    isPhase2Loading.value = false
-    appStore.setLoading(false)
-    closeSSE()
-  }
-}
-
-function onSpecEdit(event: Event) {
-  const target = event.target as HTMLTextAreaElement
-  try {
-    const parsed = JSON.parse(target.value)
-    editingSpec.value = parsed
-    const msg = appStore.messages.find(m => m.phase === 'prompt' && m.dashboardSpec)
-    if (msg) {
-      msg.dashboardSpec = parsed
-    }
-  } catch {
-    // JSON 不合法，不更新
-  }
-}
-
-function cancelAndRetry(message: Message) {
-  const idx = appStore.messages.findIndex(m => m.id === message.id)
-  if (idx > -1) {
-    appStore.messages.splice(idx, 1)
-  }
-  editingSpec.value = null
-}
-
-async function sendChat(text: string) {
-  appStore.setLoading(true)
-
-  // 添加思考中消息
-  const thinkingMessage: Message = {
-    id: (Date.now() + 1).toString(),
-    role: 'assistant',
-    content: '思考中...',
-    timestamp: Date.now(),
-  }
-  appStore.addMessage(thinkingMessage)
-
-  try {
-    const res: any = await apiService.chat(text)
-    // 更新思考中消息为实际回复
-    thinkingMessage.content = res.reply || '收到你的消息了！'
-    const idx = appStore.messages.findIndex(m => m.id === thinkingMessage.id)
-    if (idx > -1) {
-      appStore.messages[idx] = { ...thinkingMessage }
-    }
-  } catch (error) {
-    console.error('Chat failed:', error)
-    thinkingMessage.content = '聊天服务暂时不可用，请稍后再试'
-    const idx = appStore.messages.findIndex(m => m.id === thinkingMessage.id)
-    if (idx > -1) {
-      appStore.messages[idx] = { ...thinkingMessage }
-    }
-  } finally {
-    appStore.setLoading(false)
-  }
-}
-
-function connectSSE(taskId: string, messageId: string) {
-  // 确保之前的连接关闭
-  closeSSE()
-  
-  // 注意：不需要加 /v1 前缀，因为 vite 代理会自动添加
-  const url = `/api/sse/${taskId}`
-  eventSource.value = new EventSource(url)
-  
-  eventSource.value.onopen = () => {
-    console.log('SSE 连接已建立')
-  }
-  
-  eventSource.value.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data)
-      handleSSEEvent(data, messageId)
-    } catch (e) {
-      console.error('解析 SSE 数据失败:', e)
-    }
-  }
-  
-  eventSource.value.onerror = (error) => {
-    console.error('SSE 连接错误:', error)
-    closeSSE()
-  }
-}
-
-function handleSSEEvent(event: any, messageId: string) {
-  const index = appStore.messages.findIndex(m => m.id === messageId)
-  if (index === -1) return
-  
-  const message = { ...appStore.messages[index] }
-  
-  switch (event.type) {
-    case 'progress':
-      message.content = event.data.message
-      message.progress = {
-        step: event.data.step,
-        total: event.data.total,
-        message: event.data.message
-      }
-      appStore.messages[index] = message
-      break
-
-    case 'error':
-      message.content = `生成失败: ${event.data.message}`
-      message.progress = undefined
-      appStore.messages[index] = message
-      appStore.setLoading(false)
-      closeSSE()
-      break
-  }
-}
-
-function closeSSE() {
-  if (eventSource.value) {
-    eventSource.value.close()
-    eventSource.value = null
-  }
+function addMessage(msg: ChatMessage) {
+  messages.value.push(msg)
 }
 
 function scrollToBottom() {
@@ -786,17 +323,216 @@ function scrollToBottom() {
   })
 }
 
-// 监听消息变化，自动滚动到底部
-watch(() => appStore.messages.length, () => {
-  scrollToBottom()
+watch(() => messages.value.length, scrollToBottom)
+watch(messages, scrollToBottom, { deep: true })
+
+// ── 从历史记录恢复对话 ──
+const route = useRoute()
+
+onMounted(async () => {
+  const itemsParam = route.query.historyItems as string
+  if (!itemsParam) return
+
+  try {
+    const items: { type: string; rawId: string }[] = JSON.parse(decodeURIComponent(itemsParam))
+    const restored: ChatMessage[] = []
+    let msgId = 0
+
+    for (const item of items) {
+      if (item.type === 'chat') {
+        try {
+          const detail: any = await apiService.getChatHistoryDetail(item.rawId)
+          // 用户消息
+          restored.push({
+            id: `hist-user-${msgId++}`,
+            role: 'user',
+            content: detail.userMessage || '',
+            timestamp: new Date(detail.createdAt).getTime(),
+          })
+          // AI 回复 — 解析攻略内容和图片URL
+          const aiReply = detail.aiReply || ''
+          const imgMatch = aiReply.match(/!\[.*?\]\((.*?)\)/)
+          const imageUrl = imgMatch ? imgMatch[1] : undefined
+          const content = imgMatch ? aiReply.replace(/\n\n!\[.*?\]\(.*?\)$/, '') : aiReply
+          restored.push({
+            id: `hist-ai-${msgId++}`,
+            role: 'assistant',
+            content,
+            timestamp: new Date(detail.createdAt).getTime(),
+            imageUrl: imageUrl || undefined,
+          })
+        } catch (e) {
+          console.warn('恢复历史记录失败:', item.rawId, e)
+        }
+      }
+    }
+
+    if (restored.length > 0) {
+      messages.value = restored
+    }
+  } catch (e) {
+    console.warn('解析 historyItems 失败:', e)
+  }
+
+  // 清除 URL 中的查询参数，避免刷新后重复恢复
+  window.history.replaceState({}, '', '/app')
 })
 
-// 深度监听消息属性变化（进度更新、图片URL、内容更新）
-watch(() => appStore.messages, () => {
-  scrollToBottom()
-}, { deep: true })
+function parseInput(text: string): { destination: string; days: number; preferences: string } {
+  // 尝试从用户输入中提取天数和目的地
+  const dayMatch = text.match(/(\d+)\s*天/)
+  const days = dayMatch ? parseInt(dayMatch[1]) : 3
+  
+  // 移除天数字样，剩下的作为目的地+偏好
+  let rest = text.replace(/\d+\s*天/, '').trim()
+  // 如果包含常见关键词，提取偏好
+  const prefKeywords = ['情侣', '亲子', '穷游', '美食', '自驾', '休闲', '自然', '文化', '历史', '购物', '蜜月', '独旅']
+  const foundPrefs = prefKeywords.filter(k => rest.includes(k))
+  
+  // 去除偏好关键词后的剩余作为目的地
+  let destination = rest
+  for (const k of foundPrefs) {
+    destination = destination.replace(k, '')
+  }
+  destination = destination.replace(/旅游|攻略|去|到|玩|求/g, '').trim()
+  
+  return {
+    destination: destination || text,
+    days,
+    preferences: foundPrefs.join('，'),
+  }
+}
 
-onBeforeUnmount(() => {
-  closeSSE()
-})
+async function handleSend() {
+  const text = inputText.value.trim()
+  if (!text || isLoading.value) return
+  inputText.value = ''
+  
+  const { destination, days, preferences } = parseInput(text)
+  
+  // 添加用户消息
+  const userMsg: ChatMessage = {
+    id: `user-${Date.now()}`,
+    role: 'user',
+    content: text,
+    timestamp: Date.now(),
+  }
+  addMessage(userMsg)
+  
+  // 添加 AI 占位消息 — 显示趣味加载动画
+  const aiMsg: ChatMessage = {
+    id: `ai-${Date.now()}`,
+    role: 'assistant',
+    content: '',
+    timestamp: Date.now(),
+    loading: true,     // 🎯 设为 true 触发加载动画
+  }
+  addMessage(aiMsg)
+  isLoading.value = true
+  startLoadingText()
+  let hasStartedStreaming = false  // 标记是否已经开始流式传输
+
+  try {
+    const token = localStorage.getItem('access_token')
+    const response = await fetch('/api/travel', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ destination, days, preferences }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    const reader = response.body!.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''  // 保留未完成的行
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue
+        try {
+          const event = JSON.parse(line.slice(6))
+          
+          switch (event.type) {
+            case 'token':
+              // 🎯 第一个 token 到达 → 关闭加载动画，显示流式内容
+              if (!hasStartedStreaming) {
+                hasStartedStreaming = true
+                aiMsg.loading = false
+                stopLoadingText()
+              }
+              aiMsg.content += event.data.content
+              messages.value = [...messages.value]
+              scrollToBottom()
+              break
+
+            case 'text_done':
+              // 文本已全部接收
+              aiMsg.loading = false
+              messages.value = [...messages.value]
+              break
+
+            case 'image_loading':
+              // 图片正在生成，显示 loading 占位
+              aiMsg.imageLoading = true
+              messages.value = [...messages.value]
+              scrollToBottom()
+              break
+
+            case 'image':
+              aiMsg.imageLoading = false
+              if (event.data.url) {
+                aiMsg.imageUrl = event.data.url
+              } else {
+                aiMsg.imageError = true
+              }
+              messages.value = [...messages.value]
+              break
+
+            case 'done':
+              isLoading.value = false
+              scrollToBottom()
+              break
+
+            case 'error':
+              aiMsg.loading = false
+              aiMsg.error = true
+              aiMsg.content = event.data.message || '生成失败，请稍后重试'
+              messages.value = [...messages.value]
+              stopLoadingText()
+              break
+          }
+        } catch (e) {
+          // 忽略解析错误
+          continue
+        }
+      }
+    }
+  } catch (e: any) {
+    aiMsg.loading = false
+    aiMsg.error = true
+    aiMsg.content = e.message || '生成失败，请稍后重试'
+    messages.value = [...messages.value]
+    stopLoadingText()
+  } finally {
+    isLoading.value = false
+    stopLoadingText()
+  }
+}
+
+function quickSelect(destination: string, days: number, preferences: string) {
+  inputText.value = `${destination}${days}日游${preferences ? '，' + preferences : ''}`
+  handleSend()
+}
 </script>

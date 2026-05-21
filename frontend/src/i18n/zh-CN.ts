@@ -1,13 +1,13 @@
 export const zhCN: Record<string, string> = {
   // 导航
-  'nav.home': '首页',
+  'nav.home': '旅行攻略',
   'nav.history': '历史记录',
   'nav.settings': '设置',
   'nav.help': '帮助',
 
   // 侧边栏
-  'app.title': 'AI 报表生成',
-  'app.subtitle': '智能数据分析平台',
+  'app.title': 'AI 旅行攻略',
+  'app.subtitle': '智能旅行规划助手',
   'sidebar.theme': '切换主题',
   'sidebar.dark': '深色',
   'sidebar.light': '浅色',
@@ -15,7 +15,7 @@ export const zhCN: Record<string, string> = {
 
   // 登录注册
   'login.title': '欢迎回来',
-  'login.subtitle': '登录到 AI 报表生成平台',
+  'login.subtitle': '登录到 AI 旅行攻略平台',
   'login.username': '用户名',
   'login.password': '密码',
   'login.remember': '记住我',
@@ -26,7 +26,7 @@ export const zhCN: Record<string, string> = {
   'login.error': '用户名或密码错误',
 
   'register.title': '创建账户',
-  'register.subtitle': '注册 AI 报表生成平台账号',
+  'register.subtitle': '注册 AI 旅行攻略平台账号',
   'register.username': '用户名',
   'register.password': '密码',
   'register.confirmPassword': '确认密码',
@@ -38,19 +38,14 @@ export const zhCN: Record<string, string> = {
   'register.passwordMismatch': '两次输入的密码不一致',
 
   // 首页
-  'home.emptyTitle': 'AI 智能助手',
-  'home.emptyDesc': '你可以直接向我提问，或上传 Excel 文件让我帮你分析数据、生成报表',
-  'home.uploadArea': '上传 Excel 文件生成报表',
-  'home.uploadHint': '支持 .xlsx, .xls, .csv 格式',
-  'home.inputPlaceholder': '输入消息，或上传 Excel 文件分析...',
-  'home.inputPlaceholderFile': '输入你的分析需求...',
+  'home.emptyTitle': 'AI 旅行规划师',
+  'home.emptyDesc': '输入目的地，获取详细的旅行攻略和精美复古海报',
+  'home.inputPlaceholder': '输入目的地，如「杭州3日游攻略」',
   'home.send': '发送',
-  'home.generating': '生成中...',
+  'home.generating': '规划中...',
   'home.thinking': '思考中...',
-  'home.download': '下载图片',
-  'home.uploadFailed': '文件上传失败，请重试',
-  'home.generateFailed': '生成报表时出错，请重试',
-  'home.chatFailed': '聊天服务暂时不可用，请稍后再试',
+  'home.download': '下载海报',
+  'home.chatFailed': '服务暂时不可用，请稍后再试',
 
   // 报表生成
   'report.creating': '正在创建生成任务...',
@@ -78,6 +73,21 @@ export const zhCN: Record<string, string> = {
   'settings.languageDesc': '切换界面显示语言',
   'settings.langZh': '中文',
   'settings.langEn': 'English',
+
+  'settings.font': '字体',
+  'settings.fontSize': '字体大小',
+  'settings.fontSizeDesc': '调整界面文字大小',
+  'settings.fontSmall': '小',
+  'settings.fontMedium': '中',
+  'settings.fontLarge': '大',
+  'settings.codeFont': '代码字体',
+  'settings.codeFontDesc': '代码块使用的等宽字体',
+  'settings.codeFontMono': '等宽字体',
+  'settings.codeFontSystem': '系统字体',
+  'settings.density': '消息密度',
+  'settings.densityDesc': '控制消息列表的间距',
+  'settings.densityComfortable': '宽松',
+  'settings.densityCompact': '紧凑',
 
   // 设置 - 旧模块（即将去掉）
   'settings.apiConfig': 'API 配置',

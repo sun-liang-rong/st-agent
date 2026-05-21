@@ -30,7 +30,7 @@
           </div>
         </div>
 
-        <!-- 主题 -->
+        <!-- 外观（主题） -->
         <div class="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm">
           <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">{{ tt('settings.appearance') }}</h2>
           <div class="flex items-center justify-between">
@@ -50,6 +50,85 @@
             </button>
           </div>
         </div>
+
+        <!-- 字体大小 -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm">
+          <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">{{ tt('settings.font') }} · {{ tt('settings.fontSize') }}</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ tt('settings.fontSizeDesc') }}</p>
+          <div class="flex gap-3">
+            <button
+              v-for="opt in fontSizeOptions"
+              :key="opt.value"
+              @click="setFontSize(opt.value)"
+              class="flex-1 py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all"
+              :class="fontSize === opt.value
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'"
+            >
+              {{ opt.label }}
+            </button>
+          </div>
+          <!-- 预览 -->
+          <div class="mt-4 p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl text-sm transition-all" :class="fontPreviewClass">
+            <p class="font-semibold text-gray-700 dark:text-gray-300 mb-1">Aa</p>
+            <p class="text-gray-500 dark:text-gray-400">预览字体大小 · The quick brown fox jumps over the lazy dog.</p>
+          </div>
+        </div>
+
+        <!-- 代码字体 -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm">
+          <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">{{ tt('settings.codeFont') }}</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ tt('settings.codeFontDesc') }}</p>
+          <div class="flex gap-3">
+            <button
+              @click="setCodeFont('mono')"
+              class="flex-1 py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all"
+              :class="codeFont === 'mono'
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'"
+            >
+              <span class="font-mono">{{ tt('settings.codeFontMono') }}</span>
+            </button>
+            <button
+              @click="setCodeFont('system')"
+              class="flex-1 py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all"
+              :class="codeFont === 'system'
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'"
+            >
+              {{ tt('settings.codeFontSystem') }}
+            </button>
+          </div>
+          <div class="mt-4 p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl text-xs" :class="codeFont === 'system' ? '' : 'font-mono'">
+            <code class="text-gray-600 dark:text-gray-400">const greeting = "Hello, World!";</code>
+          </div>
+        </div>
+
+        <!-- 消息密度 -->
+        <div class="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-sm">
+          <h2 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">{{ tt('settings.density') }}</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ tt('settings.densityDesc') }}</p>
+          <div class="flex gap-3">
+            <button
+              @click="setDensity('comfortable')"
+              class="flex-1 py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all"
+              :class="density === 'comfortable'
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'"
+            >
+              {{ tt('settings.densityComfortable') }}
+            </button>
+            <button
+              @click="setDensity('compact')"
+              class="flex-1 py-3 px-4 rounded-xl border-2 text-sm font-medium transition-all"
+              :class="density === 'compact'
+                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                : 'border-gray-200 dark:border-slate-600 text-gray-600 dark:text-gray-400 hover:border-gray-300'"
+            >
+              {{ tt('settings.densityCompact') }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -63,6 +142,20 @@ import { t } from '@/i18n'
 const appStore = useAppStore()
 const isDark = computed(() => appStore.isDark)
 const locale = computed(() => appStore.locale)
+const fontSize = computed(() => appStore.settings.fontSize)
+const codeFont = computed(() => appStore.settings.codeFont)
+const density = computed(() => appStore.settings.messageDensity)
+
+const fontSizeOptions = [
+  { value: 'small', label: tt('settings.fontSmall') },
+  { value: 'medium', label: tt('settings.fontMedium') },
+  { value: 'large', label: tt('settings.fontLarge') },
+] as const
+
+const fontPreviewClass = computed(() => {
+  const map = { small: 'text-xs', medium: 'text-sm', large: 'text-base' }
+  return map[fontSize.value]
+})
 
 function tt(key: string) {
   return t(key, appStore.locale)
@@ -70,11 +163,22 @@ function tt(key: string) {
 
 function switchLang(l: 'zh-CN' | 'en') {
   appStore.setLocale(l)
-  // 刷新页面使所有组件的翻译生效
   window.location.reload()
 }
 
 function toggleTheme() {
   appStore.toggleTheme()
+}
+
+function setFontSize(v: 'small' | 'medium' | 'large') {
+  appStore.updateSettings({ fontSize: v })
+}
+
+function setCodeFont(v: 'mono' | 'system') {
+  appStore.updateSettings({ codeFont: v })
+}
+
+function setDensity(v: 'comfortable' | 'compact') {
+  appStore.updateSettings({ messageDensity: v })
 }
 </script>

@@ -1,12 +1,28 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <meta name="theme-color" content="#7c3aed" />
+    <meta name="description" content="AI 智能报表生成平台" />
+    <title>AI 报表生成</title>
+    <script>
+      // 深色模式 FOUC 保护：在渲染前读取 localStorage 并应用 class
+      (function() {
+        try {
+          var settings = localStorage.getItem('userSettings');
+          if (settings) {
+            var parsed = JSON.parse(settings);
+            if (parsed.theme === 'dark') {
+              document.documentElement.classList.add('dark');
+            }
+          }
+        } catch(e) {}
+      })();
+    </script>
   </head>
-  <body>
+  <body class="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-gray-100 antialiased">
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
