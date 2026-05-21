@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between h-16">
           <!-- Logo -->
           <router-link to="/" class="flex items-center gap-2.5 group">
-            <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
+            <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
               <svg class="w-4.5 h-4.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
               </svg>
@@ -51,14 +51,14 @@
       <div class="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 sm:pt-28 sm:pb-32">
         <div class="text-center max-w-3xl mx-auto">
           <!-- 标签 -->
-          <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-full text-xs font-medium text-emerald-700 dark:text-emerald-300 mb-6">
-            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-50 dark:bg-brand-900/30 border border-brand-200 dark:border-brand-800 rounded-full text-xs font-medium text-brand-700 dark:text-brand-300 mb-6">
+            <span class="w-1.5 h-1.5 bg-brand-500 rounded-full animate-pulse"></span>
             AI 驱动的智能旅行规划
           </div>
 
           <!-- 标题 -->
           <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white leading-tight tracking-tight">
-            <span class="bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">AI 智能</span>
+            <span class="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">AI 智能</span>
             旅行攻略生成
           </h1>
 
@@ -93,10 +93,10 @@
           <!-- Hero 插画区 -->
           <div class="mt-16 relative">
             <div class="bg-gradient-to-b from-gray-50 to-white dark:from-slate-800 dark:to-slate-900 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-xl p-6 sm:p-8">
-              <div class="aspect-[16/9] bg-gradient-to-br from-amber-50 to-emerald-50 dark:from-slate-700 dark:to-slate-800 rounded-xl flex items-center justify-center">
+              <div class="aspect-[16/9] bg-gradient-to-br from-amber-50 to-brand-50 dark:from-slate-700 dark:to-slate-800 rounded-xl flex items-center justify-center">
                 <div class="text-center px-6">
-                  <div class="w-16 h-16 mx-auto mb-4 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl flex items-center justify-center">
-                    <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                  <div class="w-16 h-16 mx-auto mb-4 bg-brand-100 dark:bg-brand-900/30 rounded-2xl flex items-center justify-center">
+                    <svg class="w-8 h-8 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                     </svg>
                   </div>
@@ -108,14 +108,14 @@
             <!-- 浮动标签 1 -->
             <div class="absolute -top-3 -right-3 sm:-top-4 sm:-right-4 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-100 dark:border-slate-700 px-3 py-2 animate-slide-in hidden sm:block">
               <div class="flex items-center gap-2">
-                <span class="w-2 h-2 bg-emerald-400 rounded-full"></span>
+                <span class="w-2 h-2 bg-brand-400 rounded-full"></span>
                 <span class="text-xs font-medium text-gray-700 dark:text-gray-300">攻略生成完成</span>
               </div>
             </div>
             <!-- 浮动标签 2 -->
             <div class="absolute -bottom-3 -left-3 sm:-bottom-4 sm:-left-4 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-100 dark:border-slate-700 px-3 py-2 animate-slide-in hidden sm:block" style="animation-delay: 0.3s">
               <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
                 <span class="text-xs font-medium text-gray-700 dark:text-gray-300">海报已生成</span>
@@ -137,8 +137,8 @@
         <div class="grid md:grid-cols-3 gap-8">
           <!-- 功能 1 -->
           <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-            <div class="w-14 h-14 bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:to-emerald-800/20 rounded-xl flex items-center justify-center mb-5">
-              <svg class="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            <div class="w-14 h-14 bg-gradient-to-br from-brand-100 to-brand-50 dark:from-brand-900/30 dark:to-brand-800/20 rounded-xl flex items-center justify-center mb-5">
+              <svg class="w-7 h-7 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
               </svg>
             </div>
@@ -163,8 +163,8 @@
 
           <!-- 功能 3 -->
           <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-slate-700 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-            <div class="w-14 h-14 bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:to-emerald-800/20 rounded-xl flex items-center justify-center mb-5">
-              <svg class="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+            <div class="w-14 h-14 bg-gradient-to-br from-brand-100 to-brand-50 dark:from-brand-900/30 dark:to-brand-800/20 rounded-xl flex items-center justify-center mb-5">
+              <svg class="w-7 h-7 text-brand-600 dark:text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
               </svg>
             </div>
@@ -320,7 +320,7 @@
       <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="flex flex-col md:flex-row items-center justify-between gap-4">
           <div class="flex items-center gap-2">
-            <div class="w-7 h-7 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center">
+            <div class="w-7 h-7 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
               <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
               </svg>
@@ -329,8 +329,8 @@
           </div>
           <p class="text-sm text-gray-400 dark:text-gray-500">© 2024 AI 旅行攻略 · 智能旅行规划</p>
           <div class="flex items-center gap-6">
-            <a href="#faq" class="text-sm text-gray-400 dark:text-gray-500 hover:text-emerald-500 transition-colors">常见问题</a>
-            <router-link to="/login" class="text-sm text-gray-400 dark:text-gray-500 hover:text-emerald-500 transition-colors">登录</router-link>
+            <a href="#faq" class="text-sm text-gray-400 dark:text-gray-500 hover:text-brand-500 transition-colors">常见问题</a>
+            <router-link to="/login" class="text-sm text-gray-400 dark:text-gray-500 hover:text-brand-500 transition-colors">登录</router-link>
           </div>
         </div>
       </div>

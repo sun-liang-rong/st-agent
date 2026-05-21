@@ -24,7 +24,7 @@
         <!-- Logo 区 -->
         <div class="p-5 border-b border-gray-100 dark:border-slate-700/50">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl shadow-sm shadow-emerald-200 dark:shadow-emerald-900/30 flex items-center justify-center">
+            <div class="w-9 h-9 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl shadow-sm shadow-brand-200 dark:shadow-brand-900/30 flex items-center justify-center">
               <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
               </svg>
@@ -97,7 +97,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
               </svg>
             </button>
-            <h1 class="text-lg font-bold text-emerald-600">{{ t('app.title', appStore.locale) }}</h1>
+            <h1 class="text-lg font-bold text-brand-600">{{ t('app.title', appStore.locale) }}</h1>
           </div>
           <button
             v-if="!isAuthenticated && route.path !== '/login' && route.path !== '/register'"

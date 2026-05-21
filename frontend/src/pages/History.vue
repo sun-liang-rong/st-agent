@@ -92,6 +92,7 @@ interface RawItem {
   summary: string
   createdAt: string
   rawId: string     // real DB id
+  contextId?: string // chat 记录的会话分组 ID
 }
 
 interface HistoryGroup {
@@ -163,6 +164,7 @@ onMounted(async () => {
       ...((chatRes as any).data || []).map((c: any) => ({
         id: `chat-${c.id}`,
         type: 'chat' as const,
+        contextId: c.contextId,  // 后端返回的 context_id 经驼峰转换后为 contextId
         title: c.title || c.userMessage?.slice(0, 30) + '...',
         summary: c.userMessage || '',
         createdAt: c.createdAt,
@@ -170,31 +172,51 @@ onMounted(async () => {
       })),
     ]
 
-    // 按时间升序排列，然后分组
+    // 按时间升序排列
     raw.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 
-    const result: HistoryGroup[] = []
-    let current: RawItem[] = []
-    let currentStart = 0
+    // 先用 contextId 分组，没有 contextId 的按时间窗口（5分钟）分组
+    const contextGroups = new Map<string, RawItem[]>()
+    const timeGroupItems: RawItem[] = []
 
     for (const item of raw) {
-      const t = new Date(item.createdAt).getTime()
-      if (current.length === 0) {
-        current = [item]
-        currentStart = t
-      } else if (t - currentStart <= SESSION_GAP_MS) {
-        current.push(item)
+      if (item.type === 'chat' && 'contextId' in item && item.contextId) {
+        const key = item.contextId
+        if (!contextGroups.has(key)) contextGroups.set(key, [])
+        contextGroups.get(key)!.push(item)
       } else {
-        // 新会话
-        result.push(buildGroup(current))
-        current = [item]
-        currentStart = t
+        timeGroupItems.push(item)
       }
     }
-    if (current.length > 0) result.push(buildGroup(current))
+
+    const result: HistoryGroup[] = []
+
+    // contextId 分组：每组作为一个会话
+    for (const [, items] of contextGroups) {
+      result.push(buildGroup(items))
+    }
+
+    // 时间窗口分组（无 contextId 的记录）
+    timeGroupItems.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    let window: RawItem[] = []
+    let windowStart = 0
+    for (const item of timeGroupItems) {
+      const t = new Date(item.createdAt).getTime()
+      if (window.length === 0) {
+        window = [item]
+        windowStart = t
+      } else if (t - windowStart <= SESSION_GAP_MS) {
+        window.push(item)
+      } else {
+        if (window.length > 0) result.push(buildGroup(window))
+        window = [item]
+        windowStart = t
+      }
+    }
+    if (window.length > 0) result.push(buildGroup(window))
 
     // 按时间倒序（最新的在前）
-    result.reverse()
+    result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     groups.value = result
   } catch (e) {
     console.error('获取历史记录失败:', e)

@@ -35,13 +35,17 @@ export const apiService = {
   },
 
   // ── AI 聊天 ──
-  chat(message: string): Promise<{ reply: string }> {
-    return api.post('/chat', { message })
+  chat(message: string, contextId?: string): Promise<{ reply: string }> {
+    return api.post('/chat', { message, contextId })
   },
 
   // 聊天历史
   getChatHistory() {
     return api.get('/chat/history')
+  },
+
+  getChatGroup(contextId: string) {
+    return api.get(`/chat/history/group/${contextId}`)
   },
 
   getChatHistoryDetail(id: string) {

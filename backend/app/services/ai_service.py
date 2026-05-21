@@ -78,7 +78,8 @@ class AIService:
 - 景点名称用 **加粗** 标出
 - 保持实用、具体，不要泛泛而谈
 - 如果用户有特殊偏好（如情侣游、亲子游、穷游等），行程要贴合偏好
-- 每日行程安排要合理，考虑地理位置的邻近性"""
+- 每日行程安排要合理，考虑地理位置的邻近性
+- 景点名称要具体（如"西湖断桥"而非"西湖"），用 ** 加粗标出，并简要描述该景点最打动人的视觉画面"""
 
         if days and days > 0:
             user_message = f"目的地: {destination}\n天数: {days}天\n偏好: {preferences if preferences else '无特殊偏好'}"
@@ -182,32 +183,20 @@ class AIService:
         根据目的地和攻略内容生成旅游海报图片
         返回图片本地路径，失败返回 None
         """
-        # 取攻略前 1200 字作为图片生成的上下文参考
-        itinerary_snippet = itinerary[:1200] if itinerary else ""
-        prompt = f"""A vintage 1930s Republican-era Chinese newspaper travel page for {destination}.
+        # ── 把大模型生成的完整攻略文本直接作为图片生成上下文 ──
+        itinerary_text = itinerary[:2000] if itinerary else f"{destination}旅行攻略"
 
-# Newspaper Style & Texture (CRITICAL)
-- Style: Authentic 1930s Republican-era Chinese newspaper front page
-- Paper: Aged kraft paper texture, deep yellowed patina, foxing stains, worn and frayed edges, subtle creases and tear marks
-- Printing: Traditional letterpress printing effect, slight ink bleed, uneven ink density, retro black ink on aged paper
-- Color Palette: Monochromatic sepia/ochre base, faded vermillion red for borders, muted ink black, no bright colors
+        prompt = f"""根据以下旅游攻略内容，生成一张精美的旅行宣传海报。
 
-# Layout & Composition (solve clutter)
-- Layout: Classic newspaper masthead at the top with large bold headline for the destination
-- Columns: 2-3 vertical text columns, clearly separated by thin vintage dividers
-- Decorative elements: Ornate corner filigree, woodcut-style border patterns, small ornamental flourishes
-- Sections: Clear visual blocks for each day of itinerary with subtle header lines
+攻略内容：
+{itinerary_text}
 
-# Illustration Style (separate from text areas)
-- Illustrations: Small, delicate Chinese ink wash (水墨) sketches embedded in each itinerary section
-- Style: Minimalist line art, faded sepia tone, matches the aged paper aesthetic
-- Placement: Illustrations are small, placed in margins or at top/bottom of columns, not overlapping text blocks
-
-# CRITICAL CONTROL INSTRUCTIONS (avoid garbled text)
-- Text: Use decorative, period-appropriate Chinese typography that looks like newspaper print
-- DO NOT render the full itinerary text as readable content; use stylized text blocks to mimic newspaper layout
-- NO modern fonts, NO clean sans-serif, NO digital gradients, NO neon colors
-- Maintain a nostalgic, historical, time-worn atmosphere throughout the entire design"""
+要求：
+- 海报风格要贴合攻略中描述的目的地特色
+- 画面要包含攻略中提到的核心景点或城市风貌
+- 整体风格复古精致，有旅行杂志海报的质感
+- 构图大气、色彩协调
+- 重要：不要在图片上写任何文字，纯画面即可"""
 
         start_time = time.time()
 
@@ -232,7 +221,7 @@ class AIService:
                     model=self.u1_model,
                     prompt=prompt,
                     n=1,
-                    size="1344x3136",
+                    size="1792x1024",
                 )
 
                 elapsed = time.time() - start_time

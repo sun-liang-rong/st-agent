@@ -5,8 +5,8 @@
       <!-- 空状态 -->
       <div v-if="messages.length === 0" class="flex flex-col items-center justify-center h-full text-center px-6">
         <div class="relative mb-6">
-          <div class="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/40 dark:to-emerald-800/30 rounded-2xl shadow-inner">
-            <svg class="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex items-center justify-center w-20 h-20 bg-gradient-to-br from-brand-100 to-brand-200 dark:from-brand-900/40 dark:to-brand-800/30 rounded-2xl shadow-inner">
+            <svg class="w-10 h-10 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
             </svg>
           </div>
@@ -14,17 +14,17 @@
         <h2 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">AI 旅游攻略</h2>
         <p class="text-gray-500 dark:text-gray-400 max-w-md mb-8">输入目的地，获取详细的旅行攻略和精美海报</p>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-lg">
-          <button @click="quickSelect('杭州', 3, '经典游，美食')" class="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all text-left group">
+          <button @click="quickSelect('杭州', 3, '经典游，美食')" class="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-md hover:border-brand-300 dark:hover:border-brand-700 transition-all text-left group">
             <span class="text-2xl mb-1 block">🏯</span>
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-emerald-600">杭州3日游</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-brand-600">杭州3日游</span>
           </button>
-          <button @click="quickSelect('成都', 4, '美食，休闲')" class="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all text-left group">
+          <button @click="quickSelect('成都', 4, '美食，休闲')" class="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-md hover:border-brand-300 dark:hover:border-brand-700 transition-all text-left group">
             <span class="text-2xl mb-1 block">🐼</span>
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-emerald-600">成都4日游</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-brand-600">成都4日游</span>
           </button>
-          <button @click="quickSelect('大理', 5, '情侣游，自然风光')" class="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700 transition-all text-left group">
+          <button @click="quickSelect('大理', 5, '情侣游，自然风光')" class="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:shadow-md hover:border-brand-300 dark:hover:border-brand-700 transition-all text-left group">
             <span class="text-2xl mb-1 block">🌊</span>
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-emerald-600">大理5日游</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-brand-600">大理5日游</span>
           </button>
         </div>
       </div>
@@ -33,11 +33,11 @@
       <div v-for="msg in messages" :key="msg.id" class="flex gap-3 animate-slide-in" :class="{ 'flex-row-reverse': msg.role === 'user' }">
         <!-- 头像 -->
         <div class="flex items-center justify-center flex-shrink-0 w-9 h-9 rounded-full shadow-sm mt-1"
-          :class="msg.role === 'user' ? 'bg-emerald-500' : 'bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600'">
+          :class="msg.role === 'user' ? 'bg-brand-500' : 'bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600'">
           <svg v-if="msg.role === 'user'" class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z"/>
           </svg>
-          <svg v-else class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-else class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
           </svg>
         </div>
@@ -46,7 +46,7 @@
         <div class="max-w-[80%] min-w-0">
           <div class="px-4 py-3 rounded-2xl shadow-sm"
             :class="msg.role === 'user'
-              ? 'bg-emerald-500 text-white rounded-tr-sm'
+              ? 'bg-brand-500 text-white rounded-tr-sm'
               : 'bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-slate-700/70 rounded-tl-sm'">
             <!-- 用户消息纯文本 -->
             <p v-if="msg.role === 'user'" class="whitespace-pre-wrap text-sm">{{ msg.content }}</p>
@@ -63,49 +63,49 @@
               </div>
             </div>
             <!-- AI 消息 Markdown（正常内容） -->
-            <div v-else class="prose prose-sm dark:prose-invert max-w-none prose-headings:text-gray-800 dark:prose-headings:text-gray-100 prose-a:text-emerald-600">
+            <div v-else class="prose prose-sm dark:prose-invert max-w-none prose-headings:text-gray-800 dark:prose-headings:text-gray-100 prose-a:text-brand-600">
               <MarkdownRenderer :content="msg.content" />
             </div>
           </div>
 
           <!-- 🎯 旅行加载动画（趣味等待） -->
           <div v-if="msg.loading" class="mt-3 px-1 animate-slide-in">
-            <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50 via-white to-emerald-50/30 dark:from-emerald-900/15 dark:via-slate-800 dark:to-emerald-900/5 border border-emerald-200/60 dark:border-emerald-700/30 shadow-sm">
+            <div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-brand-50 via-white to-brand-50/30 dark:from-brand-900/15 dark:via-slate-800 dark:to-brand-900/5 border border-brand-200/60 dark:border-brand-700/30 shadow-sm">
               <!-- 流光背景 -->
               <div class="absolute inset-0 bg-gradient-animate opacity-40 dark:opacity-20"></div>
               <div class="relative p-3 flex items-center gap-3">
                 <!-- 左侧动画图标组 -->
                 <div class="relative w-11 h-11 flex items-center justify-center shrink-0">
                   <!-- 地图定位针 -->
-                  <svg class="absolute w-6 h-6 text-emerald-400 animate-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg class="absolute w-6 h-6 text-brand-400 animate-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                     <circle cx="12" cy="10" r="3" fill="currentColor" class="opacity-60"/>
                   </svg>
                   <!-- 旋转罗盘 -->
-                  <svg class="absolute w-9 h-9 text-emerald-400/60 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <svg class="absolute w-9 h-9 text-brand-400/60 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                     <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" class="opacity-20" />
                     <path d="M12 2 L12 6 M12 18 L12 22 M2 12 L6 12 M18 12 L22 12" stroke-width="2" class="opacity-30" />
                     <polygon points="12,4 14,12 12,14 10,12" fill="currentColor" class="origin-center animate-compass" />
                   </svg>
                   <!-- 纸飞机 -->
-                  <svg class="absolute w-4 h-4 text-emerald-500 -top-0.5 -right-0.5 animate-plane" viewBox="0 0 24 24" fill="currentColor">
+                  <svg class="absolute w-4 h-4 text-brand-500 -top-0.5 -right-0.5 animate-plane" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M21 3L3 10.5L11 13L13.5 21L21 3Z" />
                   </svg>
                 </div>
                 <!-- 右侧动态文字 -->
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center gap-1.5">
-                    <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">AI 旅行规划师</span>
+                    <span class="text-sm font-semibold text-brand-600 dark:text-brand-400">AI 旅行规划师</span>
                     <span class="flex gap-1">
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:0s" />
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:0.15s" />
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-bounce" style="animation-delay:0.3s" />
+                      <span class="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce" style="animation-delay:0s" />
+                      <span class="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce" style="animation-delay:0.15s" />
+                      <span class="w-1.5 h-1.5 rounded-full bg-brand-400 animate-bounce" style="animation-delay:0.3s" />
                     </span>
                   </div>
-                  <p class="text-xs text-emerald-500/70 dark:text-emerald-400/60 mt-0.5 animate-thinking-text">{{ loadingText }}</p>
+                  <p class="text-xs text-brand-500/70 dark:text-brand-400/60 mt-0.5 animate-thinking-text">{{ loadingText }}</p>
                   <!-- 微型进度条 -->
-                  <div class="mt-1.5 h-0.5 bg-emerald-200/40 dark:bg-emerald-700/30 rounded-full overflow-hidden">
-                    <div class="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full animate-loading-bar"></div>
+                  <div class="mt-1.5 h-0.5 bg-brand-200/40 dark:bg-brand-700/30 rounded-full overflow-hidden">
+                    <div class="h-full bg-gradient-to-r from-brand-400 to-brand-500 rounded-full animate-loading-bar"></div>
                   </div>
                 </div>
               </div>
@@ -115,35 +115,35 @@
           <!-- 图片加载占位（趣味动画） -->
           <div v-if="msg.imageLoading" class="mt-3 animate-slide-in">
             <div class="w-full rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700 shadow-sm">
-              <div class="aspect-video relative bg-gradient-to-br from-emerald-100 via-emerald-50 to-teal-100 dark:from-emerald-900/30 dark:via-slate-800 dark:to-teal-900/20 flex flex-col items-center justify-center gap-3 overflow-hidden">
+              <div class="aspect-video relative bg-gradient-to-br from-brand-100 via-brand-50 to-teal-100 dark:from-brand-900/30 dark:via-slate-800 dark:to-teal-900/20 flex flex-col items-center justify-center gap-3 overflow-hidden">
                 <!-- 脉冲环 -->
                 <div class="absolute inset-0">
-                  <div class="absolute inset-0 animate-ping-slow rounded-full bg-emerald-400/5 dark:bg-emerald-500/5" style="top:30%; left:30%; width:40%; height:40%"></div>
-                  <div class="absolute inset-0 animate-ping-slower rounded-full bg-emerald-400/5 dark:bg-emerald-500/5" style="top:20%; left:20%; width:60%; height:60%"></div>
+                  <div class="absolute inset-0 animate-ping-slow rounded-full bg-brand-400/5 dark:bg-brand-500/5" style="top:30%; left:30%; width:40%; height:40%"></div>
+                  <div class="absolute inset-0 animate-ping-slower rounded-full bg-brand-400/5 dark:bg-brand-500/5" style="top:20%; left:20%; width:60%; height:60%"></div>
                 </div>
                 <!-- 图标组 -->
                 <div class="relative flex items-center gap-4">
-                  <svg class="w-7 h-7 text-emerald-400/70 animate-float" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                  <svg class="w-7 h-7 text-brand-400/70 animate-float" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.41a2.25 2.25 0 013.182 0l2.909 2.91m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
                   </svg>
-                  <svg class="w-7 h-7 text-emerald-400/50 animate-float-delayed" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                  <svg class="w-7 h-7 text-brand-400/50 animate-float-delayed" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/>
                   </svg>
-                  <svg class="w-7 h-7 text-emerald-400/60 animate-float" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                  <svg class="w-7 h-7 text-brand-400/60 animate-float" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h17.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125z"/>
                   </svg>
                 </div>
                 <!-- 文字 -->
                 <div class="relative text-center">
                   <div class="flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4 text-emerald-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-brand-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
-                    <span class="text-sm font-medium text-emerald-600/70 dark:text-emerald-400/70">正在绘制精美海报...</span>
+                    <span class="text-sm font-medium text-brand-600/70 dark:text-brand-400/70">正在绘制精美海报...</span>
                   </div>
                 </div>
                 <!-- 底部的渐变流光条 -->
-                <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent animate-shimmer-line"></div>
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-brand-400/60 to-transparent animate-shimmer-line"></div>
               </div>
             </div>
           </div>
@@ -209,14 +209,14 @@
               @keydown.enter.exact="handleSend"
               placeholder="输入目的地，如「杭州3日游攻略」"
               rows="2"
-              class="w-full px-4 py-3 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-400 dark:focus:border-emerald-500 transition-all"
+              class="w-full px-4 py-3 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-400 dark:focus:border-primary-500 transition-all"
               :disabled="isLoading"
             />
           </div>
           <button
             @click="handleSend"
             :disabled="!inputText.trim() || isLoading"
-            class="px-5 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-300 dark:disabled:from-slate-600 dark:disabled:to-slate-600 disabled:cursor-not-allowed text-white rounded-2xl font-medium transition-all duration-200 hover:shadow-lg hover:shadow-emerald-200/50 dark:hover:shadow-emerald-900/30 flex items-center gap-2 active:scale-95"
+            class="px-5 py-3 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 disabled:from-gray-300 disabled:to-gray-300 dark:disabled:from-slate-600 dark:disabled:to-slate-600 disabled:cursor-not-allowed text-white rounded-2xl font-medium transition-all duration-200 hover:shadow-lg hover:shadow-brand-200/50 dark:hover:shadow-brand-900/30 flex items-center gap-2 active:scale-95"
           >
             <svg v-if="isLoading" class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
@@ -328,6 +328,7 @@ watch(messages, scrollToBottom, { deep: true })
 
 // ── 从历史记录恢复对话 ──
 const route = useRoute()
+const currentContextId = ref<string | null>(null)
 
 onMounted(async () => {
   const itemsParam = route.query.historyItems as string
@@ -335,6 +336,10 @@ onMounted(async () => {
 
   try {
     const items: { type: string; rawId: string }[] = JSON.parse(decodeURIComponent(itemsParam))
+    // 用第一条记录的 ID 作为会话分组 ID
+    if (items.length > 0) {
+      currentContextId.value = `${items[0].type}-${items[0].rawId}`
+    }
     const restored: ChatMessage[] = []
     let msgId = 0
 
@@ -482,6 +487,15 @@ async function handleSend() {
 
             case 'done':
               isLoading.value = false
+              // 如果是从历史记录继续的，保存到同一会话分组
+              if (currentContextId.value) {
+                const replyContent = aiMsg.imageUrl
+                  ? aiMsg.content + `\n\n![海报](${aiMsg.imageUrl})`
+                  : aiMsg.content
+                apiService.chat(text, currentContextId.value).catch(e =>
+                  console.warn('保存会话记录失败:', e)
+                )
+              }
               scrollToBottom()
               break
 

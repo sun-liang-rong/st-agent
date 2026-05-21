@@ -3,13 +3,14 @@ import asyncio
 import httpx
 import logging
 import time
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.models import get_db
-from app.services.chat_history_service import save_chat, get_chat_list, get_chat_detail, delete_chat
+from app.services.chat_history_service import save_chat, get_chat_list, get_chat_detail, get_chat_group, delete_chat
 from app.utils.common import create_camel_response
 
 logger = logging.getLogger("app.api.chat")
@@ -34,6 +35,7 @@ def _is_retryable_http_error(e: Exception) -> bool:
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, description="用户消息")
+    contextId: Optional[str] = Field(None, description="会话分组ID，继续历史对话时传入历史记录ID")
 
 
 @router.post("")
@@ -100,9 +102,10 @@ async def chat(request: ChatRequest, db: Session = Depends(get_db)):
                     reply[:200] + ("..." if len(reply) > 200 else ""),
                 )
 
-                # 保存聊天记录
+                # 保存聊天记录（同一会话用同一 context_id 分组）
                 try:
-                    save_chat(db=db, user_message=request.message, ai_reply=reply)
+                    context_id = request.contextId or None
+                    save_chat(db=db, user_message=request.message, ai_reply=reply, context_id=context_id)
                 except Exception as e:
                     logger.warning("⚠️ [自由对话] 保存聊天记录失败 | error=%s", e)
 
@@ -153,6 +156,7 @@ async def get_chat_history(db: Session = Depends(get_db)):
     data = [
         {
             "id": str(r.id),
+            "context_id": r.context_id,
             "title": r.title or r.user_message[:30],
             "user_message": r.user_message,
             "ai_reply": r.ai_reply,
@@ -176,6 +180,23 @@ async def get_chat_history_detail(history_id: int, db: Session = Depends(get_db)
         "ai_reply": record.ai_reply,
         "created_at": record.created_at.isoformat() if record.created_at else "",
     })
+
+
+@router.get("/history/group/{context_id}")
+async def get_chat_group_endpoint(context_id: str, db: Session = Depends(get_db)):
+    """获取同一会话分组的所有聊天记录（继续对话时加载完整上下文）"""
+    records = get_chat_group(db, context_id)
+    data = [
+        {
+            "id": str(r.id),
+            "title": r.title,
+            "user_message": r.user_message,
+            "ai_reply": r.ai_reply,
+            "created_at": r.created_at.isoformat() if r.created_at else "",
+        }
+        for r in records
+    ]
+    return create_camel_response({"data": data})
 
 
 @router.delete("/history/{history_id}")

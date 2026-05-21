@@ -57,7 +57,8 @@ const { toasts, remove, ICON_MAP, BG_MAP } = useToast()
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   pointer-events: auto;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .animate-toast-in {
