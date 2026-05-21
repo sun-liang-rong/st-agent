@@ -17,9 +17,9 @@ router = APIRouter(prefix="/travel", tags=["travel"])
 
 
 class TravelRequest(BaseModel):
-    destination: str = Field(..., min_length=1, description="目的地")
-    days: int = Field(3, ge=1, le=30, description="旅行天数")
-    preferences: str = Field("", description="偏好（情侣游/亲子/穷游/美食等）")
+    destination: str = Field(..., min_length=1, description='目的地（如 "上海一日游"）')
+    days: int = Field(0, ge=0, le=30, description="旅行天数（0 表示让 AI 从目的地文本自行解析）")
+    preferences: str = Field("", description="偏好（可空，AI 从目的地文本自行解析）")
 
 
 def sse_event(event_type: str, data: dict) -> str:

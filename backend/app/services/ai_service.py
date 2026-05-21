@@ -54,7 +54,13 @@ class AIService:
         根据目的地和偏好流式生成旅游攻略 Markdown 文本
         异步生成器，逐个 yield 文本 token
         """
-        system_prompt = """你是一个专业的旅游规划专家。根据用户的目的地、天数和偏好，生成一份详细、实用的旅游攻略。
+        system_prompt = """你是一个专业的旅游规划专家。根据用户的目的地信息，自动解析天数、偏好，生成一份详细、实用的旅游攻略。
+
+## 解析规则
+- 从用户的输入中自动提取天数（如"三日"、"3天"、"一日游"、"两天"等关键词）
+- 从用户的输入中自动提取偏好（如"美食"、"亲子"、"情侣"、"穷游"等关键词）
+- 如果用户输入中没有明确天数，默认按 3 天规划
+- 行程天数要合理，一日游即 1 天，三日游即 3 天
 
 ## 输出要求
 - 使用 Markdown 格式
@@ -74,7 +80,11 @@ class AIService:
 - 如果用户有特殊偏好（如情侣游、亲子游、穷游等），行程要贴合偏好
 - 每日行程安排要合理，考虑地理位置的邻近性"""
 
-        user_message = f"目的地: {destination}\n天数: {days}天\n偏好: {preferences if preferences else '无特殊偏好'}"
+        if days and days > 0:
+            user_message = f"目的地: {destination}\n天数: {days}天\n偏好: {preferences if preferences else '无特殊偏好'}"
+        else:
+            # 让 AI 从 destination 文本中自行解析天数和偏好
+            user_message = f"请为「{destination}」规划旅行攻略"
         data = {
             "model": self.prompt_model,
             "messages": [

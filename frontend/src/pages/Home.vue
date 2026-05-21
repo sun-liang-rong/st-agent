@@ -378,29 +378,9 @@ onMounted(async () => {
   window.history.replaceState({}, '', '/app')
 })
 
-function parseInput(text: string): { destination: string; days: number; preferences: string } {
-  // 尝试从用户输入中提取天数和目的地
-  const dayMatch = text.match(/(\d+)\s*天/)
-  const days = dayMatch ? parseInt(dayMatch[1]) : 3
-  
-  // 移除天数字样，剩下的作为目的地+偏好
-  let rest = text.replace(/\d+\s*天/, '').trim()
-  // 如果包含常见关键词，提取偏好
-  const prefKeywords = ['情侣', '亲子', '穷游', '美食', '自驾', '休闲', '自然', '文化', '历史', '购物', '蜜月', '独旅']
-  const foundPrefs = prefKeywords.filter(k => rest.includes(k))
-  
-  // 去除偏好关键词后的剩余作为目的地
-  let destination = rest
-  for (const k of foundPrefs) {
-    destination = destination.replace(k, '')
-  }
-  destination = destination.replace(/旅游|攻略|去|到|玩|求/g, '').trim()
-  
-  return {
-    destination: destination || text,
-    days,
-    preferences: foundPrefs.join('，'),
-  }
+function parseInput(text: string): { destination: string } {
+  // 直接返回原始文本，让大模型自行解析天数和偏好
+  return { destination: text.trim() }
 }
 
 async function handleSend() {
@@ -408,7 +388,7 @@ async function handleSend() {
   if (!text || isLoading.value) return
   inputText.value = ''
   
-  const { destination, days, preferences } = parseInput(text)
+  const { destination } = parseInput(text)
   
   // 添加用户消息
   const userMsg: ChatMessage = {
@@ -440,7 +420,7 @@ async function handleSend() {
         'Content-Type': 'application/json',
         ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ destination, days, preferences }),
+      body: JSON.stringify({ destination }),
     })
 
     if (!response.ok) {
@@ -533,6 +513,12 @@ async function handleSend() {
 
 function quickSelect(destination: string, days: number, preferences: string) {
   inputText.value = `${destination}${days}日游${preferences ? '，' + preferences : ''}`
+  handleSend()
+}
+
+// 快速选择快捷入口（简化版）
+function quickSelectSimple(text: string) {
+  inputText.value = text
   handleSend()
 }
 </script>
