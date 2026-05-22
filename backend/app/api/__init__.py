@@ -1,6 +1,6 @@
-"""API 路由模块"""
+﻿"""API routes."""
 from fastapi import APIRouter
-from app.api import upload, generate, task, history, auth, sse, chat, travel
+from app.api import upload, generate, task, history, auth, sse, chat, travel, image
 
 router = APIRouter()
 
@@ -12,3 +12,4 @@ router.include_router(history.router)
 router.include_router(sse.router)
 router.include_router(chat.router)
 router.include_router(travel.router)
+router.include_router(image.router)

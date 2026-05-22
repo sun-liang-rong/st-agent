@@ -250,6 +250,20 @@
   animation: slideIn 0.3s ease-out forwards;
 }
 
+.message-enter {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+  color: #f59e0b;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 .animate-toast-in {
   animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

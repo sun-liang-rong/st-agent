@@ -1,0 +1,106 @@
+<h2>你更喜欢哪种视觉风格？</h2>
+<p class="subtitle">点击选择你偏好的方向，这将决定整体设计语言</p>
+
+<div class="cards">
+  <div class="card" data-choice="clean" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); padding: 24px; min-height: 260px; display: flex; flex-direction: column; gap: 12px;">
+        <!-- Clean Minimal Mockup -->
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: #a855f7; flex-shrink: 0;"></div>
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; max-width: 70%; font-size: 13px; color: #334155; line-height: 1.5;">
+            你好！我是 AI 助手，有什么可以帮你的？
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start; flex-direction: row-reverse;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: #6366f1; flex-shrink: 0;"></div>
+          <div style="background: #6366f1; border-radius: 12px; padding: 10px 14px; max-width: 70%; font-size: 13px; color: white; line-height: 1.5;">
+            帮我规划一个杭州三日游
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: #a855f7; flex-shrink: 0;"></div>
+          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; max-width: 70%; font-size: 13px; color: #334155; line-height: 1.5;">
+            好的！这是你的杭州三日游攻略... 🏞️
+          </div>
+        </div>
+        <!-- Input area -->
+        <div style="margin-top: auto; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 14px; font-size: 13px; color: #94a3b8;">
+          输入消息...
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. 清爽简约</h3>
+      <p>大量留白，轻量边框，柔和配色。类似 ChatGPT / Linear 风格，专注内容本身</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="vibrant" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); padding: 24px; min-height: 260px; display: flex; flex-direction: column; gap: 12px;">
+        <!-- Vibrant Gradient Mockup -->
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #a855f7, #6366f1); flex-shrink: 0;"></div>
+          <div style="background: rgba(255,255,255,0.08); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 10px 14px; max-width: 70%; font-size: 13px; color: #e2e8f0; line-height: 1.5;">
+            你好！我是 AI 助手 ✨
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start; flex-direction: row-reverse;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #3b82f6); flex-shrink: 0;"></div>
+          <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 12px; padding: 10px 14px; max-width: 70%; font-size: 13px; color: white; line-height: 1.5;">
+            帮我规划一个杭州三日游
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #a855f7, #6366f1); flex-shrink: 0;"></div>
+          <div style="background: rgba(255,255,255,0.08); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 10px 14px; max-width: 70%; font-size: 13px; color: #e2e8f0; line-height: 1.5;">
+            好的！这是你的杭州三日游攻略 🏞️
+          </div>
+        </div>
+        <!-- Input area -->
+        <div style="margin-top: auto; background: rgba(255,255,255,0.06); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 14px; font-size: 13px; color: rgba(255,255,255,0.4);">
+          输入消息...
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. 沉浸渐变</h3>
+      <p>深色底 + 渐变气泡 + 毛玻璃效果。类似 Discord / Arc 风格，视觉冲击力强</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="warm" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); padding: 24px; min-height: 260px; display: flex; flex-direction: column; gap: 12px;">
+        <!-- Warm Playful Mockup -->
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;">🤖</div>
+          <div style="background: white; border: 2px solid #fbbf24; border-radius: 16px; padding: 10px 14px; max-width: 70%; font-size: 13px; color: #78350f; line-height: 1.5;">
+            你好呀！我是你的旅行小助手 🌟
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start; flex-direction: row-reverse;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;">😊</div>
+          <div style="background: #f59e0b; border-radius: 16px; padding: 10px 14px; max-width: 70%; font-size: 13px; color: white; line-height: 1.5;">
+            帮我规划杭州三日游吧！
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+          <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px;">🤖</div>
+          <div style="background: white; border: 2px solid #fbbf24; border-radius: 16px; padding: 10px 14px; max-width: 70%; font-size: 13px; color: #78350f; line-height: 1.5;">
+            来啦！杭州攻略安排上 🎒
+          </div>
+        </div>
+        <!-- Input area -->
+        <div style="margin-top: auto; background: white; border: 2px solid #fbbf24; border-radius: 16px; padding: 10px 14px; font-size: 13px; color: #b45309;">
+          输入消息...
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. 温暖活泼</h3>
+      <p>暖色调 + 圆润造型 + emoji 点缀。类似 豆包 / Kimi 风格，亲切友好</p>
+    </div>
+  </div>
+</div>

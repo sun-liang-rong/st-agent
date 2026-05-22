@@ -51,8 +51,8 @@ pip install -r requirements.txt
 
 ```bash
 # 开发模式
-python -muvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 # 或者使用 Docker
 docker-compose up
 ```

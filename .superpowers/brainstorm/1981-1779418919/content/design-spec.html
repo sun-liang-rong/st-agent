@@ -1,0 +1,128 @@
+<h2>设计规范 - 温暖活泼风格</h2>
+
+<div class="spec-section">
+  <h3>🎨 色彩体系</h3>
+  <div style="display: flex; gap: 16px; flex-wrap: wrap; margin: 16px 0;">
+    <div style="text-align: center;">
+      <div style="width: 64px; height: 64px; border-radius: 12px; background: #f59e0b;"></div>
+      <div style="font-size: 12px; margin-top: 6px; color: #666;">主色 Amber</div>
+      <div style="font-size: 11px; color: #999;">#f59e0b</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="width: 64px; height: 64px; border-radius: 12px; background: #ef4444;"></div>
+      <div style="font-size: 12px; margin-top: 6px; color: #666;">强调 Red</div>
+      <div style="font-size: 11px; color: #999;">#ef4444</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="width: 64px; height: 64px; border-radius: 12px; background: #fbbf24;"></div>
+      <div style="font-size: 12px; margin-top: 6px; color: #666;">边框 Yellow</div>
+      <div style="font-size: 11px; color: #999;">#fbbf24</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="width: 64px; height: 64px; border-radius: 12px; background: #fffbeb;"></div>
+      <div style="font-size: 12px; margin-top: 6px; color: #666;">背景 Warm</div>
+      <div style="font-size: 11px; color: #999;">#fffbeb</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="width: 64px; height: 64px; border-radius: 12px; background: #78350f;"></div>
+      <div style="font-size: 12px; margin-top: 6px; color: #666;">文字 Brown</div>
+      <div style="font-size: 11px; color: #999;">#78350f</div>
+    </div>
+    <div style="text-align: center;">
+      <div style="width: 64px; height: 64px; border-radius: 12px; background: linear-gradient(135deg, #f59e0b, #ef4444);"></div>
+      <div style="font-size: 12px; margin-top: 6px; color: #666;">渐变 Accent</div>
+      <div style="font-size: 11px; color: #999;">Amber→Red</div>
+    </div>
+  </div>
+</div>
+
+<div class="spec-section" style="margin-top: 24px;">
+  <h3>💬 聊天气泡设计</h3>
+  <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); padding: 24px; border-radius: 16px; display: flex; flex-direction: column; gap: 14px;">
+    <!-- AI Message -->
+    <div style="display: flex; gap: 10px; align-items: flex-start;">
+      <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 2px 8px rgba(245,158,11,0.3);">🤖</div>
+      <div>
+        <div style="background: white; border: 2px solid #fbbf24; border-radius: 4px 16px 16px 16px; padding: 12px 16px; max-width: 320px; font-size: 14px; color: #78350f; line-height: 1.6; box-shadow: 0 2px 8px rgba(251,191,36,0.15);">
+          你好呀！我是你的旅行小助手 🌟 想去哪里玩呢？
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 6px; margin-left: 4px;">
+          <button style="background: none; border: none; font-size: 12px; color: #b45309; cursor: pointer; padding: 2px 6px; border-radius: 6px;">📋 复制</button>
+          <span style="font-size: 11px; color: #d97706;">10:30</span>
+        </div>
+      </div>
+    </div>
+    <!-- User Message -->
+    <div style="display: flex; gap: 10px; align-items: flex-start; flex-direction: row-reverse;">
+      <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #6366f1, #8b5cf6); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 2px 8px rgba(99,102,241,0.3);">😊</div>
+      <div style="text-align: right;">
+        <div style="background: linear-gradient(135deg, #f59e0b, #ef4444); border-radius: 16px 4px 16px 16px; padding: 12px 16px; max-width: 320px; font-size: 14px; color: white; line-height: 1.6; display: inline-block; text-align: left; box-shadow: 0 2px 8px rgba(245,158,11,0.3);">
+          帮我规划一个杭州三日游吧！
+        </div>
+        <div style="margin-top: 6px; margin-right: 4px;">
+          <span style="font-size: 11px; color: #d97706;">10:31</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="spec-section" style="margin-top: 24px;">
+  <h3>✨ 空状态引导</h3>
+  <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); padding: 32px; border-radius: 16px; text-align: center;">
+    <div style="font-size: 48px; margin-bottom: 12px;">🗺️</div>
+    <div style="font-size: 20px; font-weight: 600; color: #78350f; margin-bottom: 8px;">你好呀！想探索哪里？</div>
+    <div style="font-size: 14px; color: #b45309; margin-bottom: 20px;">告诉我你的目的地，我来帮你规划完美旅程</div>
+    <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+      <button style="background: white; border: 2px solid #fbbf24; border-radius: 20px; padding: 8px 18px; font-size: 13px; color: #78350f; cursor: pointer; box-shadow: 0 2px 6px rgba(251,191,36,0.2);">🏞️ 杭州三日游</button>
+      <button style="background: white; border: 2px solid #fbbf24; border-radius: 20px; padding: 8px 18px; font-size: 13px; color: #78350f; cursor: pointer; box-shadow: 0 2px 6px rgba(251,191,36,0.2);">🌸 成都美食之旅</button>
+      <button style="background: white; border: 2px solid #fbbf24; border-radius: 20px; padding: 8px 18px; font-size: 13px; color: #78350f; cursor: pointer; box-shadow: 0 2px 6px rgba(251,191,36,0.2);">🏔️ 云南自驾游</button>
+    </div>
+  </div>
+</div>
+
+<div class="spec-section" style="margin-top: 24px;">
+  <h3>🖼️ 图片生成页面</h3>
+  <div style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); padding: 24px; border-radius: 16px;">
+    <!-- Prompt suggestions -->
+    <div style="margin-bottom: 16px;">
+      <div style="font-size: 13px; color: #b45309; margin-bottom: 8px;">💡 试试这些灵感：</div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <span style="background: white; border: 2px solid #fbbf24; border-radius: 16px; padding: 6px 14px; font-size: 12px; color: #78350f;">🌅 日落下的古镇</span>
+        <span style="background: white; border: 2px solid #fbbf24; border-radius: 16px; padding: 6px 14px; font-size: 12px; color: #78350f;">🏔️ 雪山湖泊倒影</span>
+        <span style="background: white; border: 2px solid #fbbf24; border-radius: 16px; padding: 6px 14px; font-size: 12px; color: #78350f;">🌸 樱花小径</span>
+      </div>
+    </div>
+    <!-- Image gallery grid -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+      <div style="aspect-ratio: 1; background: linear-gradient(135deg, #fde68a, #fca5a5); border-radius: 16px; border: 2px solid #fbbf24; display: flex; align-items: center; justify-content: center; font-size: 32px; position: relative;">🖼️
+        <div style="position: absolute; bottom: 8px; right: 8px; display: flex; gap: 4px;">
+          <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; font-size: 12px;">⬇️</div>
+          <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; font-size: 12px;">🔄</div>
+        </div>
+      </div>
+      <div style="aspect-ratio: 1; background: linear-gradient(135deg, #c4b5fd, #93c5fd); border-radius: 16px; border: 2px solid #fbbf24; display: flex; align-items: center; justify-content: center; font-size: 32px; position: relative;">🖼️
+        <div style="position: absolute; bottom: 8px; right: 8px; display: flex; gap: 4px;">
+          <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; font-size: 12px;">⬇️</div>
+          <div style="width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; font-size: 12px;">🔄</div>
+        </div>
+      </div>
+      <!-- Loading skeleton -->
+      <div style="aspect-ratio: 1; background: linear-gradient(90deg, #fef3c7 25%, #fde68a 50%, #fef3c7 75%); background-size: 200% 100%; border-radius: 16px; border: 2px dashed #fbbf24; display: flex; align-items: center; justify-content: center; animation: shimmer 1.5s infinite;">
+        <div style="font-size: 24px; animation: pulse 1.5s infinite;">✨</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .spec-section h3 { margin-bottom: 12px; }
+</style>

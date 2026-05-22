@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+﻿import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
@@ -13,10 +13,6 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api/v1')
-      },
-      '/generated': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
       },
       '/generated': {
         target: 'http://localhost:8000',
