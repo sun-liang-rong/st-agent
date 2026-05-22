@@ -34,8 +34,9 @@
                 {{ m.content }}<span class="cursor-blink">▊</span>
               </div>
               <!-- Image message -->
-              <div v-else-if="extractImageUrl(m.content)" class="rounded-xl overflow-hidden">
-                <img :src="extractImageUrl(m.content)" class="max-w-full rounded-xl cursor-pointer hover:opacity-90 transition-opacity" alt="AI生成的图片" @click="previewImage(extractImageUrl(m.content)!)" />
+              <div v-else-if="extractImageUrl(m.content)" class="rounded-xl overflow-hidden max-w-[280px] cursor-pointer hover:opacity-90 transition-opacity" @click="previewImage(extractImageUrl(m.content)!)">
+                <img :src="extractImageUrl(m.content)" class="w-full object-cover rounded-xl" alt="AI生成的图片" />
+                <div class="text-center text-xs text-amber-500 dark:text-amber-400 mt-1">点击查看大图</div>
               </div>
               <!-- Text message -->
               <div v-else class="text-sm text-amber-900 dark:text-amber-100">
@@ -104,6 +105,11 @@
         <button @click="previewVisible = false" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center justify-center">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
+        <div class="absolute bottom-6 flex gap-3">
+          <button @click.stop="downloadImage(previewUrl)" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center justify-center" title="下载">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+        </div>
       </div>
     </transition>
   </Teleport>
@@ -144,6 +150,22 @@ function extractImageUrl(content: string): string | null {
 function previewImage(url: string) {
   previewUrl.value = url
   previewVisible.value = true
+}
+
+function downloadImage(url: string) {
+  const filename = url.split('/').pop()?.split('?')[0] || 'image.png'
+  fetch(url, { mode: 'cors' })
+    .then(res => res.blob())
+    .then(blob => {
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(a.href)
+    })
+    .catch(() => {
+      window.open(url, '_blank')
+    })
 }
 const input = ref('')
 const messages = ref<Message[]>([])

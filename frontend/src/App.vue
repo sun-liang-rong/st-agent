@@ -146,7 +146,8 @@ function goImage() {
 }
 
 async function deleteSession(s: SessionItem) {
-  const ok = await confirmRef.value?.confirm({
+  if (!confirmRef.value) return
+  const ok = await confirmRef.value.confirm({
     title: '确认删除',
     message: `删除「${s.title || '未命名会话'}」后将无法恢复`,
     type: 'danger',
@@ -158,8 +159,8 @@ async function deleteSession(s: SessionItem) {
     if (isSessionActive(s)) {
       router.push('/app')
     }
-  } catch {
-    alert('删除失败')
+  } catch (e) {
+    console.error('删除会话失败:', e)
   }
 }
 

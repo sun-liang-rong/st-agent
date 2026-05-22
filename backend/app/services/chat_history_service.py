@@ -213,19 +213,16 @@ def get_session_list(db: Session):
                 "context_id": g.context_id,
                 "title": first.title or first.user_message[:30],
                 "summary": first.user_message or "",
+                "session_type": first.session_type or "chat",
                 "updated_at": g.updated_at.isoformat() if g.updated_at else "",
             }
         )
     return result
 
 
-def delete_chat(db: Session, history_id: int) -> bool:
-    record = db.query(ChatHistory).filter(ChatHistory.id == history_id).first()
-    if not record:
+def delete_chat(db: Session, context_id: str) -> bool:
+    count = db.query(ChatHistory).filter(ChatHistory.context_id == context_id).delete()
+    if count == 0:
         return False
-    if record.context_id:
-        db.query(ChatHistory).filter(ChatHistory.context_id == record.context_id).delete()
-    else:
-        db.delete(record)
     db.commit()
     return True

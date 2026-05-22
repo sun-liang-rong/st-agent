@@ -8,8 +8,14 @@
 
     <!-- Content -->
     <div ref="scrollArea" class="flex-1 overflow-y-auto p-6 space-y-4">
+      <!-- Session Loading -->
+      <div v-if="sessionLoading" class="flex flex-col items-center justify-center py-16 text-center">
+        <div class="w-12 h-12 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin mb-4"></div>
+        <p class="text-sm text-amber-600 dark:text-amber-400">加载中...</p>
+      </div>
+
       <!-- Empty State -->
-      <div v-if="messages.length === 0 && !loading" class="flex flex-col items-center justify-center py-16 text-center">
+      <div v-else-if="messages.length === 0 && !loading" class="flex flex-col items-center justify-center py-16 text-center">
         <div class="text-5xl mb-4">🎨</div>
         <div class="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-2">输入提示词，生成图片</div>
         <div class="text-sm text-amber-600 dark:text-amber-400">试试描述一个场景，我来帮你画出来</div>
@@ -32,7 +38,7 @@
           <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-500 to-red-500 flex items-center justify-center text-lg shadow-md flex-shrink-0">🤖</div>
           <div>
             <!-- Skeleton (loading) -->
-            <div v-if="m.loading" class="skeleton-image-card bg-white dark:bg-stone-800 border-2 border-dashed border-amber-300 dark:border-stone-600 rounded-2xl overflow-hidden max-w-[280px]" :style="{ aspectRatio: skeletonAspect }">
+            <div v-if="m.loading" class="skeleton-image-card bg-white dark:bg-stone-800 border-2 border-dashed border-amber-300 dark:border-stone-600 rounded-2xl overflow-hidden max-w-[280px]" :style="{ aspectRatio: m.aspectRatio || skeletonAspect }">
               <div class="skeleton-shimmer-layer"></div>
               <div class="skeleton-particles">
                 <span v-for="i in 6" :key="i" class="particle" :style="particleStyle(i)"></span>
@@ -48,7 +54,7 @@
             <!-- Image Card (completed) -->
             <div v-else-if="m.imageUrl" class="max-w-[280px] rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 group cursor-pointer" @click="previewImage(m.imageUrl)">
               <div class="relative">
-                <img :src="m.imageUrl" class="w-full object-cover rounded-2xl" :style="{ aspectRatio: skeletonAspect }" alt="generated" />
+                <img :src="m.imageUrl" class="w-full object-cover rounded-2xl" :style="{ aspectRatio: m.aspectRatio || '1/1' }" alt="generated" />
                 <!-- Overlay Actions -->
                 <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 rounded-2xl"></div>
                 <div class="absolute top-3 right-3 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200">
@@ -211,6 +217,7 @@
 import { ref, computed, onBeforeUnmount, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { apiService } from '../services/api'
+import { useSessionStore } from '@/stores/session'
 
 const input = ref('')
 const loading = ref(false)
@@ -309,6 +316,7 @@ interface ImageMessage {
   imageUrl?: string
   prompt?: string
   loading?: boolean
+  aspectRatio?: string
 }
 
 const messages = ref<ImageMessage[]>([])
@@ -316,7 +324,9 @@ const scrollArea = ref<HTMLElement | null>(null)
 const previewVisible = ref(false)
 const previewUrl = ref('')
 const route = useRoute()
+const sessionStore = useSessionStore()
 const sessionId = ref('')
+const sessionLoading = ref(false)
 
 function extractImageUrl(content: string): string | null {
   const match = content.match(/^\[图片\]\s*(.+)$/s)
@@ -327,22 +337,27 @@ function extractImageUrl(content: string): string | null {
 }
 
 async function loadSession(id: string) {
-  const res: any = await apiService.getSessionMessages(id)
-  const rows = Array.isArray(res) ? res : (res.data || [])
-  messages.value = rows.flatMap((row: any) => {
-    const result: ImageMessage[] = []
-    const userText = row.userMessage || ''
-    result.push({ id: `${row.id}-u`, role: 'user', content: userText })
-    const imgUrl = extractImageUrl(row.aiReply || '')
-    if (imgUrl) {
-      result.push({ id: `${row.id}-a`, role: 'assistant', content: '', imageUrl: imgUrl, prompt: userText })
-    } else {
-      result.push({ id: `${row.id}-a`, role: 'assistant', content: row.aiReply || '' })
-    }
-    return result
-  })
-  sessionId.value = id
-  scrollToBottom()
+  sessionLoading.value = true
+  try {
+    const res: any = await apiService.getSessionMessages(id)
+    const rows = Array.isArray(res) ? res : (res.data || [])
+    messages.value = rows.flatMap((row: any) => {
+      const result: ImageMessage[] = []
+      const userText = row.userMessage || ''
+      result.push({ id: `${row.id}-u`, role: 'user', content: userText })
+      const imgUrl = extractImageUrl(row.aiReply || '')
+      if (imgUrl) {
+        result.push({ id: `${row.id}-a`, role: 'assistant', content: '', imageUrl: imgUrl, prompt: userText, aspectRatio: '1/1' })
+      } else {
+        result.push({ id: `${row.id}-a`, role: 'assistant', content: row.aiReply || '' })
+      }
+      return result
+    })
+    sessionId.value = id
+    scrollToBottom()
+  } finally {
+    sessionLoading.value = false
+  }
 }
 
 watch(
@@ -380,7 +395,7 @@ function generate() {
 
   messages.value.push({ id: `${Date.now()}-u`, role: 'user', content: prompt })
   const aiId = `${Date.now()}-a`
-  messages.value.push({ id: aiId, role: 'assistant', content: '', loading: true, prompt })
+  messages.value.push({ id: aiId, role: 'assistant', content: '', loading: true, prompt, aspectRatio: skeletonAspect.value })
   input.value = ''
   scrollToBottom()
 
@@ -407,6 +422,7 @@ function generate() {
       loading.value = false
       progressStep.value = 0
       progressMessage.value = ''
+      sessionStore.loadSessions()
     },
     (error) => {
       const aiMsg = messages.value.find(m => m.id === aiId)
@@ -423,10 +439,19 @@ function generate() {
 }
 
 function downloadImage(url: string) {
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'ai-generated.png'
-  a.click()
+  const filename = url.split('/').pop()?.split('?')[0] || 'ai-generated.png'
+  fetch(url, { mode: 'cors' })
+    .then(res => res.blob())
+    .then(blob => {
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(a.href)
+    })
+    .catch(() => {
+      window.open(url, '_blank')
+    })
 }
 
 function regenerate(prompt: string) {

@@ -51,8 +51,8 @@
           <div class="flex items-start justify-between gap-3">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
-                <span v-if="group.sessionType === 'image'" class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-amber-100 dark:bg-amber-900/30 text-xs">🎨</span>
-                <span v-else class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-blue-100 dark:bg-blue-900/30 text-xs">💬</span>
+                <span v-if="group.sessionType === 'image'" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/30 text-xs text-amber-700 dark:text-amber-300">🎨 图片生成</span>
+                <span v-else class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/30 text-xs text-blue-700 dark:text-blue-300">💬 对话</span>
                 <h3 class="text-base font-semibold text-gray-800 dark:text-white truncate">
                   {{ group.title }}
                 </h3>
@@ -136,7 +136,7 @@ function openGroup(group: HistoryGroup) {
   const chatItem = group.items.find(item => item.type === 'chat' && item.contextId)
   if (chatItem && chatItem.contextId) {
     if (group.sessionType === 'image') {
-      router.push({ path: '/image-gen', query: { sessionId: chatItem.contextId } })
+      router.push({ path: '/image', query: { sessionId: chatItem.contextId } })
     } else {
       router.push({ path: '/app', query: { sessionId: chatItem.contextId } })
     }
@@ -146,7 +146,8 @@ function openGroup(group: HistoryGroup) {
 }
 
 async function deleteGroup(group: HistoryGroup) {
-  const ok = await confirmRef.value?.confirm({
+  if (!confirmRef.value) return
+  const ok = await confirmRef.value.confirm({
     title: '确认删除',
     message: `删除「${group.title}」后无法恢复，包含 ${group.count} 条记录`,
     type: 'danger',
