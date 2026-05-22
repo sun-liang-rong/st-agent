@@ -173,11 +173,138 @@ class AIService:
                     )
                     raise  # 让调用者处理
 
+    async def generate_image(
+        self,
+        prompt: str,
+        style: str = "旅行海报",
+        ratio: str = "1:1",
+    ) -> Optional[str]:
+        """
+        通用图片生成，不关联旅游攻略
+        返回图片本地路径，失败返回 None
+        """
+        style_map = {
+            "旅行海报": "复古精致，有旅行杂志海报的质感",
+            "写实摄影": "写实摄影风格，高清逼真，光影自然",
+            "水墨画": "中国传统水墨画风格，淡雅意境",
+            "日系插画": "日系动漫插画风格，色彩鲜明",
+            "油画": "经典油画风格，笔触细腻，色彩浓郁",
+            "水彩画": "水彩画风格，清新淡雅，色彩柔和",
+            "像素画": "像素艺术风格，复古游戏感",
+            "赛博朋克": "赛博朋克风格，霓虹灯光，未来感",
+        }
+        style_desc = style_map.get(style, "精美插画风格")
+
+        ratio_map = {
+            "1:1": "2048x2048",
+            "2:3": "1664x2496",
+            "3:2": "2496x1664",
+            "3:4": "1760x2368",
+            "4:3": "2368x1760",
+            "4:5": "1824x2272",
+            "5:4": "2272x1824",
+            "9:16": "1536x2752",
+            "16:9": "2752x1536",
+            "9:21": "1344x3136",
+            "21:9": "3072x1376",
+        }
+        size = ratio_map.get(ratio, "2048x2048")
+
+        image_prompt = f"""根据用户的描述，生成一张精美的图片。
+
+用户描述：{prompt}
+
+要求：
+- 图片风格：{style_desc}
+- 构图大气、色彩协调
+- 重要：不要在图片上写任何文字，纯画面即可"""
+
+        start_time = time.time()
+
+        client = AsyncOpenAI(
+            base_url="https://token.sensenova.cn/v1",
+            api_key=self.api_key,
+        )
+
+        for attempt in range(1, MAX_RETRIES + 1):
+            logger.info(
+                "📤 [图片生成] 开始请求 (attempt %d/%d) | prompt=%s model=%s",
+                attempt, MAX_RETRIES, prompt[:50], self.u1_model,
+            )
+            logger.debug(
+                "📦 [图片生成] 请求参数 (attempt %d/%d) | prompt=%s size=%s n=1",
+                attempt, MAX_RETRIES, image_prompt, size,
+            )
+
+            try:
+                resp = await client.images.generate(
+                    model=self.u1_model,
+                    prompt=image_prompt,
+                    n=1,
+                    size=size,
+                )
+
+                elapsed = time.time() - start_time
+                image_url = resp.data[0].url if resp.data else None
+
+                logger.info(
+                    "📡 [图片生成] 响应收到 (attempt %d/%d) | has_url=%s elapsed=%.2fs",
+                    attempt, MAX_RETRIES, bool(image_url), elapsed,
+                )
+
+                if not image_url:
+                    logger.warning("⚠️ [图片生成] 未返回图片URL (attempt %d/%d)", attempt, MAX_RETRIES)
+                    return None
+
+                cover_id = str(uuid.uuid4())
+                cover_dir = "generated"
+                os.makedirs(cover_dir, exist_ok=True)
+                cover_path = os.path.join(cover_dir, f"{cover_id}.png")
+
+                download_start = time.time()
+                async with httpx.AsyncClient(timeout=60.0) as dl_client:
+                    img_response = await dl_client.get(image_url)
+                    img_response.raise_for_status()
+                    with open(cover_path, "wb") as f:
+                        f.write(img_response.content)
+
+                download_elapsed = time.time() - download_start
+                total_elapsed = time.time() - start_time
+                logger.info(
+                    "✅ [图片生成] 下载完成 (attempt %d/%d) | path=%s size=%d bytes download_time=%.2fs total_time=%.2fs",
+                    attempt, MAX_RETRIES, cover_path, len(img_response.content),
+                    download_elapsed, total_elapsed,
+                )
+                return cover_path
+
+            except Exception as e:
+                elapsed = time.time() - start_time
+                retryable = _is_retryable_error(e)
+
+                if retryable and attempt < MAX_RETRIES:
+                    delay = RETRY_DELAYS[attempt - 1]
+                    logger.warning(
+                        "⚠️ [图片生成] 第%d次失败, %ds后重试 (attempt %d/%d) | error=%s elapsed=%.2fs",
+                        attempt, delay, attempt, MAX_RETRIES, str(e), elapsed,
+                    )
+                    await asyncio.sleep(delay)
+                else:
+                    reason = "不可重试错误" if not retryable else "全部重试耗尽"
+                    logger.error(
+                        "❌ [图片生成] %s | prompt=%s attempt=%d/%d error=%s elapsed=%.2fs",
+                        reason, prompt[:50], attempt, MAX_RETRIES, str(e), elapsed,
+                    )
+                    if attempt == MAX_RETRIES:
+                        logger.debug("堆栈跟踪", exc_info=True)
+                    return None
+
     async def generate_travel_image(
         self,
         destination: str,
         preferences: str = "",
         itinerary: str = "",
+        style: str = "旅行海报",
+        ratio: str = "1:1",
     ) -> Optional[str]:
         """
         根据目的地和攻略内容生成旅游海报图片
@@ -186,15 +313,41 @@ class AIService:
         # ── 把大模型生成的完整攻略文本直接作为图片生成上下文 ──
         itinerary_text = itinerary[:2000] if itinerary else f"{destination}旅行攻略"
 
-        prompt = f"""根据以下旅游攻略内容，生成一张精美的旅行宣传海报。
+        # 风格映射
+        style_map = {
+            "旅行海报": "复古精致，有旅行杂志海报的质感",
+            "写实摄影": "写实摄影风格，高清逼真，光影自然",
+            "水墨画": "中国传统水墨画风格，淡雅意境",
+            "动漫插画": "日系动漫插画风格，色彩鲜明",
+            "油画": "经典油画风格，笔触细腻，色彩浓郁",
+            "赛博朋克": "赛博朋克风格，霓虹灯光，未来感",
+            "极简扁平": "极简扁平设计风格，干净利落",
+        }
+        style_desc = style_map.get(style, "复古精致，有旅行杂志海报的质感")
+
+        # 比例映射 → 图片尺寸
+        ratio_map = {
+            "1:1": "2048x2048",
+            "2:3": "1664x2496",
+            "3:2": "2496x1664",
+            "3:4": "1760x2368",
+            "4:3": "2368x1760",
+            "4:5": "1824x2272",
+            "5:4": "2272x1824",
+            "9:16": "1536x2752",
+            "16:9": "2752x1536",
+            "9:21": "1344x3136",
+            "21:9": "3072x1376",
+        }
+        size = ratio_map.get(ratio, "2048x2048")
+
+        prompt = f"""根据以下旅游攻略内容，生成一张精美的旅行宣传图片。
 
 攻略内容：
 {itinerary_text}
 
 要求：
-- 海报风格要贴合攻略中描述的目的地特色
-- 画面要包含攻略中提到的核心景点或城市风貌
-- 整体风格复古精致，有旅行杂志海报的质感
+- 图片风格：{style_desc}
 - 构图大气、色彩协调
 - 重要：不要在图片上写任何文字，纯画面即可"""
 
@@ -221,7 +374,7 @@ class AIService:
                     model=self.u1_model,
                     prompt=prompt,
                     n=1,
-                    size="2048x2048",
+                    size=size,
                 )
 
                 elapsed = time.time() - start_time

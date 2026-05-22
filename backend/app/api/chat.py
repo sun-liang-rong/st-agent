@@ -16,7 +16,6 @@ from app.config import get_settings
 from app.models import get_db
 from app.services.chat_history_service import (
     delete_chat,
-    get_chat_detail,
     get_chat_group,
     get_chat_list,
     get_session_list,
@@ -146,7 +145,7 @@ async def list_sessions(db: Session = Depends(get_db)):
 
 @router.get("/session/{context_id}")
 async def session_detail(context_id: str, db: Session = Depends(get_db)):
-    rows = get_chat_detail(db, context_id)
+    rows = get_chat_group(db, context_id)
     if not rows:
         return create_camel_response([])
     return create_camel_response(rows)

@@ -100,7 +100,7 @@ export interface ParsedExcel {
 // ── 用户设置（保留） ──
 
 export interface UserSettings {
-  theme: 'light' | 'dark';
+  theme: 'light' | 'dark' | 'system';
   fontSize: 'small' | 'medium' | 'large';
   codeFont: 'mono' | 'system';
   messageDensity: 'comfortable' | 'compact';

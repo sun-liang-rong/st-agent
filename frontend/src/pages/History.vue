@@ -50,9 +50,13 @@
         >
           <div class="flex items-start justify-between gap-3">
             <div class="flex-1 min-w-0">
-              <h3 class="text-base font-semibold text-gray-800 dark:text-white truncate">
-                {{ group.title }}
-              </h3>
+              <div class="flex items-center gap-2">
+                <span v-if="group.sessionType === 'image'" class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-amber-100 dark:bg-amber-900/30 text-xs">🎨</span>
+                <span v-else class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-blue-100 dark:bg-blue-900/30 text-xs">💬</span>
+                <h3 class="text-base font-semibold text-gray-800 dark:text-white truncate">
+                  {{ group.title }}
+                </h3>
+              </div>
               <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                 {{ group.summary }}
               </p>
@@ -62,7 +66,7 @@
                 <span class="text-xs text-gray-400">{{ group.count }} {{ tt('history.interactions') }}</span>
               </div>
             </div>
-            <button @click.stop="deleteGroup(group)" class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all flex-shrink-0" title="删除">
+            <button @click.stop="deleteGroup(group)" class="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all flex-shrink-0 border border-gray-200 dark:border-gray-600 hover:border-red-300 dark:hover:border-red-700" title="删除">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
               </svg>
@@ -71,6 +75,8 @@
         </div>
       </div>
     </div>
+
+    <ConfirmDialog ref="confirmRef" />
   </div>
 </template>
 
@@ -80,10 +86,12 @@ import { useRouter } from 'vue-router'
 import { apiService } from '@/services/api'
 import { useAppStore } from '@/stores/app'
 import { t } from '@/i18n'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const router = useRouter()
 const appStore = useAppStore()
 const tt = (key: string) => t(key, appStore.locale)
+const confirmRef = ref<InstanceType<typeof ConfirmDialog> | null>(null)
 
 interface RawItem {
   id: string        // "report-3" or "chat-5"
@@ -93,6 +101,7 @@ interface RawItem {
   createdAt: string
   rawId: string     // real DB id
   contextId?: string // chat 记录的会话分组 ID
+  sessionType?: string // chat 或 image
 }
 
 interface HistoryGroup {
@@ -102,6 +111,7 @@ interface HistoryGroup {
   createdAt: string
   count: number
   items: RawItem[]
+  sessionType: string // chat 或 image
 }
 
 const groups = ref<HistoryGroup[]>([])
@@ -123,23 +133,41 @@ function formatDate(dateString: string): string {
 // }
 
 function openGroup(group: HistoryGroup) {
-  // 传递组内所有记录，确保完整会话展示
-  const itemsParam = encodeURIComponent(
-    JSON.stringify(group.items.map(item => ({
-      type: item.type,
-      rawId: item.rawId
-    })))
-  )
-  router.push({ path: '/app', query: { historyItems: itemsParam } })
+  const chatItem = group.items.find(item => item.type === 'chat' && item.contextId)
+  if (chatItem && chatItem.contextId) {
+    if (group.sessionType === 'image') {
+      router.push({ path: '/image-gen', query: { sessionId: chatItem.contextId } })
+    } else {
+      router.push({ path: '/app', query: { sessionId: chatItem.contextId } })
+    }
+    return
+  }
+  router.push({ path: '/app' })
 }
 
-function deleteGroup(group: HistoryGroup) {
-  if (!confirm(`${tt('history.deleteConfirm')} (${group.count} ${tt('history.interactions')}) ？`)) return
-  // 删除组内所有记录
-  Promise.all(group.items.map(item => {
-    if (item.type === 'report') return apiService.deleteHistory(item.rawId)
-    else return apiService.deleteChatHistory(item.rawId)
-  })).then(() => {
+async function deleteGroup(group: HistoryGroup) {
+  const ok = await confirmRef.value?.confirm({
+    title: '确认删除',
+    message: `删除「${group.title}」后无法恢复，包含 ${group.count} 条记录`,
+    type: 'danger',
+  })
+  if (!ok) return
+  const promises: Promise<any>[] = []
+  const chatContextIds = new Set<string>()
+  for (const item of group.items) {
+    if (item.type === 'chat' && item.contextId) {
+      chatContextIds.add(item.contextId)
+    }
+  }
+  for (const contextId of chatContextIds) {
+    promises.push(apiService.deleteChatHistory(contextId))
+  }
+  for (const item of group.items) {
+    if (item.type === 'report') {
+      promises.push(apiService.deleteHistory(item.rawId))
+    }
+  }
+  Promise.all(promises).then(() => {
     groups.value = groups.value.filter(g => g.id !== group.id)
   }).catch(() => alert('删除失败'))
 }
@@ -153,7 +181,7 @@ onMounted(async () => {
     ])
 
     const raw: RawItem[] = [
-      ...((reportRes as any).data || []).map((r: any) => ({
+      ...(Array.isArray(reportRes) ? reportRes : ((reportRes as any).data || [])).map((r: any) => ({
         id: `report-${r.id}`,
         type: 'report' as const,
         title: r.fileName?.replace(/\.(xlsx|xls|csv)$/i, '') || '报表',
@@ -161,10 +189,11 @@ onMounted(async () => {
         createdAt: r.createdAt,
         rawId: String(r.id),
       })),
-      ...((chatRes as any).data || []).map((c: any) => ({
+      ...(Array.isArray(chatRes) ? chatRes : ((chatRes as any).data || [])).map((c: any) => ({
         id: `chat-${c.id}`,
         type: 'chat' as const,
-        contextId: c.contextId,  // 后端返回的 context_id 经驼峰转换后为 contextId
+        contextId: c.contextId,
+        sessionType: c.sessionType || 'chat',
         title: c.title || c.userMessage?.slice(0, 30) + '...',
         summary: c.userMessage || '',
         createdAt: c.createdAt,
@@ -228,13 +257,15 @@ onMounted(async () => {
 function buildGroup(items: RawItem[]): HistoryGroup {
   const first = items[0]
   const last = items[items.length - 1]
+  const sessionType = items.find(i => i.sessionType)?.sessionType || 'chat'
   return {
     id: `group-${first.rawId}`,
     title: first.title,
     summary: first.summary,
-    createdAt: last.createdAt, // 取最晚时间
+    createdAt: last.createdAt,
     count: items.length,
     items,
+    sessionType,
   }
 }
 </script>

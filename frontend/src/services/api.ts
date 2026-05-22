@@ -1,7 +1,9 @@
-﻿import axios from 'axios'
+import axios from 'axios'
+
+const BASE_URL = '/api'
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: BASE_URL,
   timeout: 120000,
   headers: {
     'Content-Type': 'application/json'
@@ -25,7 +27,7 @@ api.interceptors.response.use(
 )
 
 export interface SessionItem {
-  sessionId: string
+  contextId: string
   sessionType: 'chat' | 'image'
   title: string
   summary: string
@@ -43,7 +45,7 @@ export const apiService = {
     const token = localStorage.getItem('access_token')
     const body = JSON.stringify({ message, contextId })
 
-    fetch('/api/chat/stream', {
+    fetch(`${BASE_URL}/chat/stream`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -93,6 +95,63 @@ export const apiService = {
       .catch((e) => onError(e.message))
   },
 
+  /** SSE 流式图片生成 */
+  generateImageStream(
+    prompt: string,
+    style: string,
+    ratio: string,
+    contextId: string | undefined,
+    onProgress: (step: number, message: string) => void,
+    onImage: (imageUrl: string, contextId: string) => void,
+    onDone: () => void,
+    onError: (error: string) => void,
+  ) {
+    fetch(`${BASE_URL}/image/generate/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, style, ratio, contextId }),
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          onError(`请求失败: ${response.status}`)
+          return
+        }
+        const reader = response.body!.getReader()
+        const decoder = new TextDecoder()
+        let buffer = ''
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue
+            const jsonStr = line.slice(6).trim()
+            if (!jsonStr) continue
+            try {
+              const data = JSON.parse(jsonStr)
+              switch (data.type) {
+                case 'progress':
+                  onProgress(data.step, data.message)
+                  break
+                case 'image':
+                  onImage(data.imageUrl, data.contextId)
+                  break
+                case 'done':
+                  onDone()
+                  break
+                case 'error':
+                  onError(data.message)
+                  break
+              }
+            } catch { /* ignore parse errors */ }
+          }
+        }
+      })
+      .catch((err) => onError(err.message || '网络错误'))
+  },
+
   chat(message: string, contextId?: string): Promise<{ reply: string; contextId: string }> {
     return api.post('/chat', { message, contextId })
   },
@@ -101,12 +160,12 @@ export const apiService = {
     return api.get('/chat/sessions')
   },
 
-  getSessionMessages(sessionId: string) {
-    return api.get(`/chat/sessions/${sessionId}`)
+  getSessionMessages(contextId: string) {
+    return api.get(`/chat/session/${contextId}`)
   },
 
-  generateImage(prompt: string, contextId?: string): Promise<{ imageUrl: string; contextId: string }> {
-    return api.post('/image/generate', { prompt, contextId })
+  generateImage(prompt: string, contextId?: string, style?: string, ratio?: string): Promise<{ imageUrl: string; contextId: string }> {
+    return api.post('/image/generate', { prompt, contextId, style, ratio })
   },
 
   getChatHistory() {
@@ -130,4 +189,4 @@ export const apiService = {
   },
 }
 
-export default api
+export default apiService

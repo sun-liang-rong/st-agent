@@ -41,12 +41,15 @@ def save_chat(
     user_message: str,
     ai_reply: str,
     context_id: Optional[str] = None,
+    session_type: Optional[str] = "chat",
+    title: Optional[str] = None,
 ) -> ChatHistory:
     """Save one chat record."""
-    title = user_message[:30] + ("..." if len(user_message) > 30 else "")
+    display_title = title if title is not None else user_message[:30] + ("..." if len(user_message) > 30 else "")
     record = ChatHistory(
         context_id=context_id,
-        title=title,
+        session_type=session_type,
+        title=display_title,
         user_message=user_message,
         ai_reply=ai_reply,
     )
@@ -54,69 +57,6 @@ def save_chat(
     db.commit()
     db.refresh(record)
     return record
-
-
-async def stream_chat_message(
-    message: str,
-    context_id: str,
-) -> AsyncGenerator[str, None]:
-    """Stream AI chat response, yielding JSON strings per token."""
-    url = f"{settings.SENSENOVA_API_BASE}/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {settings.SENSENOVA_API_KEY}",
-        "Content-Type": "application/json",
-    }
-    system_prompt = "你是一个智能助手。请用中文回复，语气友好、专业，回复简洁清晰。"
-    data = {
-        "model": settings.SENSENOVA_PROMPT_MODEL,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": message},
-        ],
-        "temperature": 0.8,
-        "max_tokens": 2000,
-        "stream": True,
-    }
-
-    token_count = 0
-
-    for attempt in range(1, MAX_RETRIES + 1):
-        try:
-            async with httpx.AsyncClient(timeout=120.0) as client:
-                async with client.stream("POST", url, headers=headers, json=data) as response:
-                    response.raise_for_status()
-                    async for line in response.aiter_lines():
-                        if not line.startswith("data: "):
-                            continue
-                        json_str = line[6:].strip()
-                        if json_str == "[DONE]":
-                            break
-                        try:
-                            chunk = json.loads(json_str)
-                            choices = chunk.get("choices", [])
-                            if not choices:
-                                continue
-                            delta = choices[0].get("delta", {})
-                            content = delta.get("content", "")
-                            if content:
-                                token_count += 1
-                                yield json.dumps({"type": "token", "content": content}, ensure_ascii=False)
-                        except json.JSONDecodeError:
-                            continue
-
-            yield json.dumps({"type": "done", "contextId": context_id}, ensure_ascii=False)
-            return
-
-        except Exception as e:
-            retryable = _is_retryable_http_error(e) and token_count == 0
-            if retryable and attempt < MAX_RETRIES:
-                delay = RETRY_DELAYS[attempt - 1]
-                logger.warning("[流式聊天] 第%d次失败, %ds后重试 | error=%s", attempt, delay, str(e))
-                await asyncio.sleep(delay)
-            else:
-                logger.error("[流式聊天] 失败 | context_id=%s error=%s", context_id, str(e))
-                yield json.dumps({"type": "error", "message": str(e)}, ensure_ascii=False)
-                return
 
 
 async def stream_chat_message(

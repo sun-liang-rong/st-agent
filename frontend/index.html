@@ -12,11 +12,18 @@
       (function() {
         try {
           var settings = localStorage.getItem('userSettings');
+          var theme = 'system';
           if (settings) {
             var parsed = JSON.parse(settings);
-            if (parsed.theme === 'dark') {
-              document.documentElement.classList.add('dark');
+            if (parsed.theme === 'light' || parsed.theme === 'dark' || parsed.theme === 'system') {
+              theme = parsed.theme;
             }
+          }
+          var isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
           }
         } catch(e) {}
       })();

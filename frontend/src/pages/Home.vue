@@ -33,6 +33,11 @@
               <div v-if="m.isStreaming" class="text-sm text-amber-900 dark:text-amber-100 whitespace-pre-wrap">
                 {{ m.content }}<span class="cursor-blink">▊</span>
               </div>
+              <!-- Image message -->
+              <div v-else-if="extractImageUrl(m.content)" class="rounded-xl overflow-hidden">
+                <img :src="extractImageUrl(m.content)" class="max-w-full rounded-xl cursor-pointer hover:opacity-90 transition-opacity" alt="AI生成的图片" @click="previewImage(extractImageUrl(m.content)!)" />
+              </div>
+              <!-- Text message -->
               <div v-else class="text-sm text-amber-900 dark:text-amber-100">
                 <MarkdownRenderer :content="m.content" />
               </div>
@@ -62,29 +67,50 @@
 
     <!-- Input Area -->
     <div class="p-4 border-t border-amber-200 dark:border-stone-700">
-      <div class="flex gap-3 items-end max-w-3xl mx-auto">
+      <div class="max-w-3xl mx-auto relative">
         <textarea
           v-model="input"
           @keydown.enter.exact.prevent="send"
           :disabled="loading"
           placeholder="输入内容，和大模型交流"
           rows="2"
-          class="flex-1 border-2 border-amber-300 dark:border-stone-600 bg-white dark:bg-stone-800 rounded-2xl px-4 py-3 text-sm text-amber-900 dark:text-amber-100 placeholder-amber-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none disabled:opacity-50"
+          class="w-full border-2 border-amber-300 dark:border-stone-600 bg-white dark:bg-stone-800 rounded-2xl px-4 py-3 pr-12 text-sm text-amber-900 dark:text-amber-100 placeholder-amber-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none disabled:opacity-50"
         ></textarea>
         <button
+          v-show="input.trim()"
           @click="send"
-          :disabled="loading || !input.trim()"
-          class="px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+          :disabled="loading"
+          class="absolute right-3 bottom-3 w-8 h-8 rounded-lg bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center justify-center"
         >
           <svg v-if="loading" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          {{ loading ? '思考中...' : '发送' }}
+          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
       </div>
     </div>
   </div>
+
+  <!-- Image Preview Lightbox -->
+  <Teleport to="body">
+    <transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div v-if="previewVisible" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center" style="z-index: 99999" @click="previewVisible = false">
+        <img :src="previewUrl" class="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl" @click.stop />
+        <button @click="previewVisible = false" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center justify-center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
+import { Teleport } from 'vue'
 import { onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { apiService } from '@/services/api'
@@ -102,6 +128,23 @@ interface Message {
 const route = useRoute()
 const sessionStore = useSessionStore()
 const loading = ref(false)
+
+// Image preview
+const previewVisible = ref(false)
+const previewUrl = ref('')
+
+function extractImageUrl(content: string): string | null {
+  const match = content.match(/^\[图片\]\s*(.+)$/s)
+  if (!match) return null
+  const path = match[1].trim()
+  if (path.startsWith('http')) return path
+  return '/' + path.replace(/\\/g, '/')
+}
+
+function previewImage(url: string) {
+  previewUrl.value = url
+  previewVisible.value = true
+}
 const input = ref('')
 const messages = ref<Message[]>([])
 const sessionId = ref<string>('')
@@ -123,7 +166,7 @@ function quickSend(text: string) {
 
 async function loadSession(id: string) {
   const res: any = await apiService.getSessionMessages(id)
-  const rows = res.data || []
+  const rows = Array.isArray(res) ? res : (res.data || [])
   messages.value = rows.flatMap((row: any, idx: number) => [
     { id: `${row.id}-u-${idx}`, role: 'user' as const, content: row.userMessage, created_at: row.createdAt || '' },
     { id: `${row.id}-a-${idx}`, role: 'assistant' as const, content: row.aiReply, created_at: row.createdAt || '' },

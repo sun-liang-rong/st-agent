@@ -1,20 +1,16 @@
 <template>
-  <div class="markdown-body" :class="{ dark: isDark }" v-html="renderedContent"></div>
+  <div class="markdown-body" v-html="renderedContent"></div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Marked } from 'marked'
 import DOMPurify from 'dompurify'
-import { useAppStore } from '@/stores/app'
 
 const marked = new Marked({
   gfm: true,
   breaks: true,
 })
-
-const appStore = useAppStore()
-const isDark = computed(() => appStore.isDark)
 
 const props = defineProps<{
   content: string

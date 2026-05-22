@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 主题切换平滑过渡：只在切换瞬间生效 */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, fill 0.3s ease, stroke 0.3s ease !important;
+}
+
 /* ═══════════════════════════════════════════
    设计系统 Token
    ═══════════════════════════════════════════ */
@@ -92,17 +100,12 @@
     background: #64748b;
   }
 
-  /* ── 全局过渡 ── */
-  *,
-  *::before,
-  *::after {
-    transition-property: background-color, border-color, color, fill, stroke;
-    transition-duration: 150ms;
-    transition-timing-function: ease;
-  }
+  /* ── 交互元素额外过渡 ── */
   button, a, input, textarea, select {
     transition-property: background-color, border-color, color, fill, stroke,
       transform, box-shadow, opacity;
+    transition-duration: 0.3s;
+    transition-timing-function: ease;
   }
 
   /* ── 系统代码字体 ── */

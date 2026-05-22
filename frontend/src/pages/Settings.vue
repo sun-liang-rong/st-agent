@@ -38,16 +38,19 @@
               <p class="text-gray-700 dark:text-gray-300">{{ tt('settings.darkMode') }}</p>
               <p class="text-sm text-gray-500 dark:text-gray-400">{{ tt('settings.darkModeDesc') }}</p>
             </div>
-            <button
-              @click="toggleTheme"
-              class="w-14 h-7 rounded-full transition-colors"
-              :class="isDark ? 'bg-primary-500' : 'bg-gray-300'"
-            >
-              <div
-                class="w-5 h-5 bg-white rounded-full shadow transform transition-transform"
-                :class="isDark ? 'translate-x-8' : 'translate-x-1'"
-              />
-            </button>
+            <div class="flex gap-1 bg-gray-100 dark:bg-stone-700 rounded-lg p-1">
+              <button
+                v-for="opt in themeOptions"
+                :key="opt.value"
+                class="px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200"
+                :class="appStore.theme === opt.value
+                  ? 'bg-white dark:bg-stone-600 text-amber-600 dark:text-amber-400 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+                @click="setTheme(opt.value)"
+              >
+                {{ opt.icon }} {{ opt.label }}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -137,6 +140,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useAppStore } from '@/stores/app'
+import type { ThemeMode } from '@/stores/app'
 import { t } from '@/i18n'
 
 const appStore = useAppStore()
@@ -145,6 +149,12 @@ const locale = computed(() => appStore.locale)
 const fontSize = computed(() => appStore.settings.fontSize)
 const codeFont = computed(() => appStore.settings.codeFont)
 const density = computed(() => appStore.settings.messageDensity)
+
+const themeOptions = [
+  { value: 'light' as ThemeMode, icon: '☀️', label: '浅色' },
+  { value: 'dark' as ThemeMode, icon: '🌙', label: '深色' },
+  { value: 'system' as ThemeMode, icon: '💻', label: '跟随系统' },
+]
 
 const fontSizeOptions = [
   { value: 'small', label: tt('settings.fontSmall') },
@@ -166,8 +176,10 @@ function switchLang(l: 'zh-CN' | 'en') {
   window.location.reload()
 }
 
-function toggleTheme() {
-  appStore.toggleTheme()
+function setTheme(t: ThemeMode) {
+  appStore.theme = t
+  appStore.settings.theme = t
+  appStore.updateSettings()
 }
 
 function setFontSize(v: 'small' | 'medium' | 'large') {

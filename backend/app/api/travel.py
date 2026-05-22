@@ -78,7 +78,8 @@ async def generate_travel_stream(request: TravelRequest, db: Session = Depends(g
                 ai_reply = full_content
                 if image_url:
                     ai_reply += f"\n\n![攻略海报]({image_url})"
-                save_chat(db=db, user_message=user_msg, ai_reply=ai_reply)
+                context_id = f"travel-{uuid.uuid4().hex}"
+                save_chat(db=db, user_message=user_msg, ai_reply=ai_reply, context_id=context_id)
                 logger.info("💾 [旅游攻略] 对话已保存 | destination=%s", request.destination)
             except Exception as e:
                 logger.warning("⚠️ [旅游攻略] 保存对话失败 | error=%s", e)
