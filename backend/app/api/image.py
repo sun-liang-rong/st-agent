@@ -42,12 +42,12 @@ async def generate_image_stream(request: Request):
             yield f"data: {json.dumps({'type': 'progress', 'step': 3, 'message': '正在下载图片...'}, ensure_ascii=False)}\n\n"
 
             # 推送图片结果
-            yield f"data: {json.dumps({'type': 'image', 'imageUrl': image_url, 'contextId': context_id}, ensure_ascii=False)}\n\n"
+            yield f"data: {json.dumps({'type': 'image', 'imageUrl': image_url, 'contextId': context_id, 'ratio': ratio}, ensure_ascii=False)}\n\n"
 
             # 保存聊天记录（user_message 存用户原始提示词，title 同步）
             save_chat(db=db, user_message=prompt,
                       ai_reply=f"[图片] {image_url}", context_id=context_id,
-                      session_type="image", title=prompt)
+                      session_type="image", title=prompt, image_ratio=ratio)
             db.commit()
 
             # 完成

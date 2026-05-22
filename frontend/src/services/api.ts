@@ -102,7 +102,7 @@ export const apiService = {
     ratio: string,
     contextId: string | undefined,
     onProgress: (step: number, message: string) => void,
-    onImage: (imageUrl: string, contextId: string) => void,
+    onImage: (imageUrl: string, contextId: string, ratio: string) => void,
     onDone: () => void,
     onError: (error: string) => void,
   ) {

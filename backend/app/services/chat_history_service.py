@@ -43,12 +43,14 @@ def save_chat(
     context_id: Optional[str] = None,
     session_type: Optional[str] = "chat",
     title: Optional[str] = None,
+    image_ratio: Optional[str] = None,
 ) -> ChatHistory:
     """Save one chat record."""
     display_title = title if title is not None else user_message[:30] + ("..." if len(user_message) > 30 else "")
     record = ChatHistory(
         context_id=context_id,
         session_type=session_type,
+        image_ratio=image_ratio,
         title=display_title,
         user_message=user_message,
         ai_reply=ai_reply,

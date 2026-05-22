@@ -336,6 +336,10 @@ function extractImageUrl(content: string): string | null {
   return '/' + path.replace(/\\/g, '/')
 }
 
+function ratioToAspect(r: string): string {
+  return ratioMap[r] || '1/1'
+}
+
 async function loadSession(id: string) {
   sessionLoading.value = true
   try {
@@ -346,8 +350,9 @@ async function loadSession(id: string) {
       const userText = row.userMessage || ''
       result.push({ id: `${row.id}-u`, role: 'user', content: userText })
       const imgUrl = extractImageUrl(row.aiReply || '')
+      const imgRatio = row.imageRatio || ''
       if (imgUrl) {
-        result.push({ id: `${row.id}-a`, role: 'assistant', content: '', imageUrl: imgUrl, prompt: userText, aspectRatio: '1/1' })
+        result.push({ id: `${row.id}-a`, role: 'assistant', content: '', imageUrl: imgUrl, prompt: userText, aspectRatio: ratioToAspect(imgRatio) })
       } else {
         result.push({ id: `${row.id}-a`, role: 'assistant', content: row.aiReply || '' })
       }
@@ -408,12 +413,13 @@ function generate() {
       progressStep.value = step
       progressMessage.value = message
     },
-    (imageUrl, contextId) => {
+    (imageUrl, contextId, imgRatio) => {
       const aiMsg = messages.value.find(m => m.id === aiId)
       if (aiMsg) {
         aiMsg.loading = false
         aiMsg.imageUrl = imageUrl
         aiMsg.id = contextId || aiId
+        aiMsg.aspectRatio = ratioToAspect(imgRatio || ratio.value)
       }
       if (contextId) sessionId.value = contextId
       scrollToBottom()
