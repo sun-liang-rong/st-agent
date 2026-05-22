@@ -27,7 +27,7 @@
         <div v-if="m.role === 'user'" class="flex gap-3 items-start justify-end">
           <div class="text-right">
             <div class="bg-gradient-to-r from-amber-500 to-red-500 text-white rounded-tr-sm rounded-tl-xl rounded-bl-xl rounded-br-xl px-4 py-3 shadow-md max-w-[75%] inline-block">
-              <p class="whitespace-pre-wrap text-sm">{{ m.content }}</p>
+              <p class="whitespace-pre-wrap text-sm text-left">{{ m.content }}</p>
             </div>
           </div>
           <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-lg shadow-md flex-shrink-0">😊</div>
@@ -38,7 +38,7 @@
           <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-500 to-red-500 flex items-center justify-center text-lg shadow-md flex-shrink-0">🤖</div>
           <div>
             <!-- Skeleton (loading) -->
-            <div v-if="m.loading" class="skeleton-image-card bg-white dark:bg-stone-800 border-2 border-dashed border-amber-300 dark:border-stone-600 rounded-2xl overflow-hidden max-w-[280px]" :style="{ aspectRatio: m.aspectRatio || skeletonAspect }">
+            <div v-if="m.loading" class="skeleton-image-card bg-white dark:bg-stone-800 border-2 border-dashed border-amber-300 dark:border-stone-600 rounded-2xl overflow-hidden w-[280px]" :style="{ aspectRatio: m.aspectRatio || skeletonAspect }">
               <div class="skeleton-shimmer-layer"></div>
               <div class="skeleton-particles">
                 <span v-for="i in 6" :key="i" class="particle" :style="particleStyle(i)"></span>
@@ -198,7 +198,7 @@
             </div>
             <!-- Send Button (icon, only visible when input has content) -->
             <button
-              v-show="input.trim()"
+              v-show="input.trim() || loading"
               @click="generate"
               :disabled="loading"
               class="w-8 h-8 rounded-lg bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center justify-center"

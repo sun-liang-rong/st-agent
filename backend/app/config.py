@@ -47,7 +47,7 @@ class Settings:
     # JWT 配置
     SECRET_KEY: str = "your-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
     
     CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
     

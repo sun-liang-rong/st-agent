@@ -54,7 +54,7 @@
         <div v-else class="flex gap-3 items-start justify-end group">
           <div class="text-right">
             <div class="bg-gradient-to-r from-amber-500 to-red-500 text-white rounded-tr-sm rounded-tl-xl rounded-bl-xl rounded-br-xl px-4 py-3 shadow-md max-w-[75%] inline-block">
-              <p class="whitespace-pre-wrap text-sm">{{ m.content }}</p>
+              <p class="whitespace-pre-wrap text-sm text-left">{{ m.content }}</p>
             </div>
             <div class="flex items-center gap-3 mt-1.5 mr-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
               <span class="text-xs text-amber-600 dark:text-amber-400">{{ formatTime(m.created_at) }}</span>
