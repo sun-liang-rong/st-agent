@@ -212,7 +212,7 @@ class AIService:
                 attempt, MAX_RETRIES, destination, preferences or "无", self.u1_model,
             )
             logger.debug(
-                "📦 [图片生成] 请求参数 (attempt %d/%d) | prompt=%s size=1344x3136 n=1",
+                "📦 [图片生成] 请求参数 (attempt %d/%d) | prompt=%s size=2048x2048 n=1",
                 attempt, MAX_RETRIES, prompt,
             )
 
@@ -221,7 +221,7 @@ class AIService:
                     model=self.u1_model,
                     prompt=prompt,
                     n=1,
-                    size="1792x1024",
+                    size="2048x2048",
                 )
 
                 elapsed = time.time() - start_time
