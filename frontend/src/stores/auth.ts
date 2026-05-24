@@ -27,7 +27,7 @@ export const useAuthStore = defineStore('auth', {
         this.token = response.access_token
         this.isAuthenticated = true
         
-        localStorage.setItem('access_token', response.access_token)
+        localStorage.setItem('token', response.access_token)
         
         const userResponse = await authApi.getCurrentUser()
         this.user = userResponse
@@ -55,12 +55,12 @@ export const useAuthStore = defineStore('auth', {
       this.token = null
       this.isAuthenticated = false
       
-      localStorage.removeItem('access_token')
+      localStorage.removeItem('token')
       localStorage.removeItem('user')
     },
 
     async checkAuth() {
-      const token = localStorage.getItem('access_token')
+      const token = localStorage.getItem('token')
       const userStr = localStorage.getItem('user')
       
       if (token && userStr) {

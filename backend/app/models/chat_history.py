@@ -1,5 +1,5 @@
 """聊天记录模型"""
-from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean
 from sqlalchemy.sql import func
 from app.models.database import Base
 
@@ -17,6 +17,8 @@ class ChatHistory(Base):
     title = Column(String(255), nullable=True, comment="聊天标题，取用户消息的前30个字")
     user_message = Column(Text, nullable=False, comment="用户发送的消息")
     ai_reply = Column(Text, nullable=False, comment="AI 的回复")
+    is_deleted = Column(Boolean, default=False, server_default="0", comment="是否已软删除")
+    deleted_at = Column(DateTime(timezone=True), nullable=True, comment="软删除时间")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")
 
     def __repr__(self):

@@ -1,264 +1,336 @@
 <template>
-  <div class="flex flex-col h-full bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 dark:from-stone-900 dark:via-stone-800 dark:to-stone-900">
-    <!-- Messages Area -->
-    <div class="flex-1 overflow-y-auto p-6 space-y-5">
-      <!-- Empty State -->
-      <div v-if="messages.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
-        <div class="text-5xl mb-4">🗺️</div>
-        <div class="text-xl font-semibold text-amber-800 dark:text-amber-200 mb-2">你好呀！想探索哪里？</div>
-        <div class="text-sm text-amber-600 dark:text-amber-400 mb-6">告诉我你的目的地，我来帮你规划完美旅程</div>
-        <div class="flex gap-3 flex-wrap justify-center">
-          <button @click="quickSend('帮我规划一个杭州三日游')"
-            class="bg-white dark:bg-stone-800 border-2 border-amber-300 dark:border-stone-600 rounded-full px-4 py-2 text-sm text-amber-800 dark:text-amber-200 hover:-translate-y-0.5 hover:shadow-md transition-all">
-            🏞️ 杭州三日游
-          </button>
-          <button @click="quickSend('帮我规划成都美食之旅')"
-            class="bg-white dark:bg-stone-800 border-2 border-amber-300 dark:border-stone-600 rounded-full px-4 py-2 text-sm text-amber-800 dark:text-amber-200 hover:-translate-y-0.5 hover:shadow-md transition-all">
-            🌸 成都美食之旅
-          </button>
-          <button @click="quickSend('帮我规划云南自驾游')"
-            class="bg-white dark:bg-stone-800 border-2 border-amber-300 dark:border-stone-600 rounded-full px-4 py-2 text-sm text-amber-800 dark:text-amber-200 hover:-translate-y-0.5 hover:shadow-md transition-all">
-            🏔️ 云南自驾游
-          </button>
-        </div>
-      </div>
+  <AppPage>
+    <div class="max-w-4xl mx-auto p-4 md:p-6 space-y-4">
+      <!-- Messages -->
+      <div ref="scrollContainer" class="space-y-4 pb-32">
+        <AppEmpty v-if="messages.length === 0 && !loading" emoji="🗺️" title="开始你的旅行对话" description="输入目的地或旅行问题，AI 为你规划行程" />
 
-      <!-- Message List -->
-      <div v-for="m in messages" :key="m.id" class="message-enter">
-        <!-- AI Message -->
-        <div v-if="m.role === 'assistant'" class="flex gap-3 items-start group">
-          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-500 to-red-500 flex items-center justify-center text-lg shadow-md flex-shrink-0">🤖</div>
-          <div>
-            <div class="bg-white dark:bg-stone-800 border-2 border-amber-300 dark:border-stone-600 rounded-tl-sm rounded-tr-xl rounded-bl-xl rounded-br-xl px-4 py-3 shadow-sm max-w-[75%]">
-              <div v-if="m.isStreaming" class="text-sm text-amber-900 dark:text-amber-100 whitespace-pre-wrap">
-                {{ m.content }}<span class="cursor-blink">▊</span>
+        <div v-for="m in messages" :key="m.id" class="flex gap-3" :class="m.role === 'user' ? 'justify-end' : 'justify-start'">
+          <!-- User message -->
+          <div v-if="m.role === 'user'" class="max-w-[80%] bg-gradient-to-r from-amber-500 to-red-500 text-white px-4 py-2.5 rounded-2xl rounded-br-md shadow-sm text-sm whitespace-pre-wrap">{{ m.content }}</div>
+
+          <!-- AI message -->
+          <div v-else class="max-w-[85%] group">
+            <div class="bg-white dark:bg-stone-800 border border-amber-200 dark:border-stone-700 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
+              <!-- Image display -->
+              <div v-if="m.imageUrl" class="mb-3">
+                <img :src="m.imageUrl" class="max-w-full rounded-lg cursor-pointer hover:opacity-90 transition-opacity" alt="生成的图片" @click="previewUrl = m.imageUrl; previewVisible = true" />
               </div>
-              <!-- Image message -->
-              <div v-else-if="extractImageUrl(m.content)" class="rounded-xl overflow-hidden max-w-[280px] cursor-pointer hover:opacity-90 transition-opacity" @click="previewImage(extractImageUrl(m.content)!)">
-                <img :src="extractImageUrl(m.content)" class="w-full object-cover rounded-xl" alt="AI生成的图片" />
-                <div class="text-center text-xs text-amber-500 dark:text-amber-400 mt-1">点击查看大图</div>
+              <!-- Image progress -->
+              <div v-if="m.imageProgress" class="mb-3 flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                <AppSpinner size="sm" />
+                <span>{{ m.imageProgress }}</span>
               </div>
-              <!-- Text message -->
-              <div v-else class="text-sm text-amber-900 dark:text-amber-100">
+              <!-- Text content -->
+              <div v-if="m.content" class="text-sm text-amber-900 dark:text-amber-100 prose prose-amber dark:prose-invert max-w-none">
                 <MarkdownRenderer :content="m.content" />
               </div>
+              <!-- Streaming indicator -->
+              <div v-if="m.isStreaming" class="inline-block w-2 h-4 bg-amber-500 animate-pulse ml-1"></div>
+              <!-- Loading -->
+              <div v-if="!m.content && !m.imageUrl && !m.imageProgress && !m.isStreaming" class="flex items-center gap-2 text-amber-400">
+                <AppSpinner size="sm" />
+              </div>
             </div>
+
+            <!-- Action buttons -->
             <div class="flex items-center gap-3 mt-1.5 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
               <span class="text-xs text-amber-600 dark:text-amber-400">{{ formatTime(m.created_at) }}</span>
               <button @click="copyMessage(m.content)" class="text-xs text-amber-700 dark:text-amber-300 hover:text-amber-900 transition-colors">📋 复制</button>
+              <button v-if="!m.isStreaming && m.messageId" @click="regenerateMessage(m)" class="text-xs text-amber-700 dark:text-amber-300 hover:text-amber-900 transition-colors">🔄 重新生成</button>
+              <button v-if="!m.isStreaming && isTravelContent(m.content)" @click="exportTravel(m)" class="text-xs text-amber-700 dark:text-amber-300 hover:text-amber-900 transition-colors">📥 导出</button>
+              <button v-if="!m.isStreaming && m.imageUrl" @click="favoriteImage(m)" class="text-xs text-amber-700 dark:text-amber-300 hover:text-amber-900 transition-colors">⭐ 收藏</button>
+              <button v-if="!m.isStreaming && sessionId" @click="openShare('travel', sessionId)" class="text-xs text-amber-700 dark:text-amber-300 hover:text-amber-900 transition-colors">🔗 分享</button>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- User Message -->
-        <div v-else class="flex gap-3 items-start justify-end group">
-          <div class="text-right">
-            <div class="bg-gradient-to-r from-amber-500 to-red-500 text-white rounded-tr-sm rounded-tl-xl rounded-bl-xl rounded-br-xl px-4 py-3 shadow-md max-w-[75%] inline-block">
-              <p class="whitespace-pre-wrap text-sm text-left">{{ m.content }}</p>
-            </div>
-            <div class="flex items-center gap-3 mt-1.5 mr-2 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-              <span class="text-xs text-amber-600 dark:text-amber-400">{{ formatTime(m.created_at) }}</span>
-              <button @click="copyMessage(m.content)" class="text-xs text-amber-700 dark:text-amber-300 hover:text-amber-900 transition-colors">📋 复制</button>
-            </div>
+      <!-- Input area -->
+      <div class="fixed bottom-0 left-0 md:left-64 right-0 bg-gradient-to-t from-amber-50 via-amber-50 to-transparent dark:from-stone-900 dark:via-stone-900 pt-6 pb-4 px-4">
+        <div class="max-w-4xl mx-auto">
+          <!-- Image generation options -->
+          <div v-if="showImageGen" class="mb-2 flex items-center gap-2 flex-wrap">
+            <select v-model="imageStyle" class="rounded-lg border border-amber-200 dark:border-stone-600 bg-white dark:bg-stone-800 px-2 py-1 text-xs text-amber-900 dark:text-amber-100 focus:outline-none focus:ring-1 focus:ring-amber-400">
+              <option value="旅行海报">旅行海报</option>
+              <option value="水墨画">水墨画</option>
+              <option value="油画">油画</option>
+              <option value="水彩画">水彩画</option>
+              <option value="像素画">像素画</option>
+              <option value="赛博朋克">赛博朋克</option>
+              <option value="日系插画">日系插画</option>
+              <option value="写实摄影">写实摄影</option>
+            </select>
+            <select v-model="imageRatio" class="rounded-lg border border-amber-200 dark:border-stone-600 bg-white dark:bg-stone-800 px-2 py-1 text-xs text-amber-900 dark:text-amber-100 focus:outline-none focus:ring-1 focus:ring-amber-400">
+              <option value="1:1">1:1</option>
+              <option value="3:4">3:4</option>
+              <option value="4:3">4:3</option>
+              <option value="16:9">16:9</option>
+              <option value="9:16">9:16</option>
+            </select>
           </div>
-          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-lg shadow-md flex-shrink-0">😊</div>
+          <div class="flex items-end gap-2">
+            <button @click="showImageGen = !showImageGen" class="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-colors" :class="showImageGen ? 'bg-amber-500 text-white' : 'bg-amber-100 dark:bg-stone-700 text-amber-600 dark:text-amber-300'" title="图片生成模式">🎨</button>
+            <div class="flex-1 relative">
+              <textarea v-model="input" @keydown.enter.exact="send" rows="1" class="w-full rounded-xl border-2 border-amber-200 dark:border-stone-600 bg-white dark:bg-stone-800 px-4 py-2.5 text-sm text-amber-900 dark:text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none" placeholder="输入旅行问题..." @input="autoResize"></textarea>
+            </div>
+            <AppBtn text="发送" :disabled="!input.trim() || loading" :full="false" @click="send" />
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Input Area -->
-    <div class="p-4 border-t border-amber-200 dark:border-stone-700">
-      <div class="max-w-3xl mx-auto relative">
-        <textarea
-          v-model="input"
-          @keydown.enter.exact.prevent="send"
-          :disabled="loading"
-          placeholder="输入内容，和大模型交流"
-          rows="2"
-          class="w-full border-2 border-amber-300 dark:border-stone-600 bg-white dark:bg-stone-800 rounded-2xl px-4 py-3 pr-12 text-sm text-amber-900 dark:text-amber-100 placeholder-amber-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none disabled:opacity-50"
-        ></textarea>
-        <button
-          v-show="input.trim()"
-          @click="send"
-          :disabled="loading"
-          class="absolute right-3 bottom-3 w-8 h-8 rounded-lg bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg flex items-center justify-center"
-        >
-          <svg v-if="loading" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
-      </div>
-    </div>
-  </div>
+    <!-- Image Preview -->
+    <AppLightbox v-model:visible="previewVisible" :src="previewUrl" downloadable />
 
-  <!-- Image Preview Lightbox -->
-  <Teleport to="body">
-    <transition
-      enter-active-class="transition duration-300 ease-out"
-      enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
-      leave-active-class="transition duration-200 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
-      <div v-if="previewVisible" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center" style="z-index: 99999" @click="previewVisible = false">
-        <img :src="previewUrl" class="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl" @click.stop />
-        <button @click="previewVisible = false" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center justify-center">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-        <div class="absolute bottom-6 flex gap-3">
-          <button @click.stop="downloadImage(previewUrl)" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center justify-center" title="下载">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          </button>
-        </div>
-      </div>
-    </transition>
-  </Teleport>
+    <!-- Share Dialog -->
+    <ShareDialog v-model:visible="shareVisible" :type="shareType" :contentId="shareContentId" @close="shareVisible = false" />
+  </AppPage>
 </template>
 
 <script setup lang="ts">
-import { Teleport } from 'vue'
-import { onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
-import { apiService } from '@/services/api'
+import { ref, nextTick, onMounted, watch } from 'vue'
+import { chatApi, travelApi, imageApi, downloadBlob } from '@/services/api'
 import { useSessionStore } from '@/stores/session'
+import { downloadImage } from '@/composables/useImageDownload'
+import { useSSE } from '@/composables/useSSE'
+import AppPage from '@/components/AppPage.vue'
+import AppEmpty from '@/components/AppEmpty.vue'
+import AppSpinner from '@/components/AppSpinner.vue'
+import AppBtn from '@/components/AppBtn.vue'
+import AppLightbox from '@/components/AppLightbox.vue'
 import MarkdownRenderer from '@/components/MarkdownRenderer.vue'
+import ShareDialog from '@/components/ShareDialog.vue'
 
 interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
-  created_at: string
+  created_at?: string
   isStreaming?: boolean
+  messageId?: number
+  imageUrl?: string
+  imageProgress?: string
 }
 
-const route = useRoute()
 const sessionStore = useSessionStore()
-const loading = ref(false)
+const { readSSE } = useSSE()
 
-// Image preview
+const messages = ref<Message[]>([])
+const input = ref('')
+const loading = ref(false)
+const sessionId = ref(sessionStore.currentSessionId)
 const previewVisible = ref(false)
 const previewUrl = ref('')
+const showImageGen = ref(false)
+const imageStyle = ref('旅行海报')
+const imageRatio = ref('1:1')
+const scrollContainer = ref<HTMLElement>()
 
-function extractImageUrl(content: string): string | null {
-  const match = content.match(/^\[图片\]\s*(.+)$/s)
-  if (!match) return null
-  const path = match[1].trim()
-  if (path.startsWith('http')) return path
-  return '/' + path.replace(/\\/g, '/')
-}
+// Share & Favorite
+const shareVisible = ref(false)
+const shareType = ref<'travel' | 'image'>('travel')
+const shareContentId = ref('')
 
-function previewImage(url: string) {
-  previewUrl.value = url
-  previewVisible.value = true
-}
+watch(() => sessionStore.currentSessionId, (val) => {
+  sessionId.value = val
+  if (val) loadSession(val)
+})
 
-function downloadImage(url: string) {
-  const filename = url.split('/').pop()?.split('?')[0] || 'image.png'
-  fetch(url, { mode: 'cors' })
-    .then(res => res.blob())
-    .then(blob => {
-      const a = document.createElement('a')
-      a.href = URL.createObjectURL(blob)
-      a.download = filename
-      a.click()
-      URL.revokeObjectURL(a.href)
-    })
-    .catch(() => {
-      window.open(url, '_blank')
-    })
-}
-const input = ref('')
-const messages = ref<Message[]>([])
-const sessionId = ref<string>('')
-
-function formatTime(dateStr: string): string {
+function formatTime(dateStr?: string) {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
+}
+
+function isTravelContent(text: string) {
+  if (!text) return false
+  const keywords = ['行程', '路线', '攻略', '景点', '推荐', '旅游', '旅行']
+  return keywords.some(k => text.includes(k))
+}
+
+function autoResize(e: Event) {
+  const el = e.target as HTMLTextAreaElement
+  el.style.height = 'auto'
+  el.style.height = Math.min(el.scrollHeight, 150) + 'px'
+}
+
+function scrollToBottom() {
+  nextTick(() => {
+    if (scrollContainer.value) {
+      scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight
+    }
+  })
 }
 
 function copyMessage(text: string) {
   navigator.clipboard.writeText(text)
 }
 
-function quickSend(text: string) {
-  input.value = text
-  send()
-}
-
 async function loadSession(id: string) {
-  const res: any = await apiService.getSessionMessages(id)
-  const rows = Array.isArray(res) ? res : (res.data || [])
-  messages.value = rows.flatMap((row: any, idx: number) => [
-    { id: `${row.id}-u-${idx}`, role: 'user' as const, content: row.userMessage, created_at: row.createdAt || '' },
-    { id: `${row.id}-a-${idx}`, role: 'assistant' as const, content: row.aiReply, created_at: row.createdAt || '' },
-  ])
-  sessionId.value = id
-}
-
-function newSession() {
-  messages.value = []
-  sessionId.value = ''
+  try {
+    const res: any = await chatApi.getSessionDetail(id)
+    const rows = Array.isArray(res) ? res : (res?.data || [])
+    messages.value = rows.map((row: any) => [
+      { id: `${row.id}-u`, role: 'user' as const, content: row.userMessage || '' },
+      { id: `${row.id}-a`, role: 'assistant' as const, content: row.aiReply || '', messageId: row.id },
+    ]).flat()
+    scrollToBottom()
+  } catch (e) {
+    console.error('加载会话失败:', e)
+  }
 }
 
 async function send() {
-  const content = input.value.trim()
-  if (!content || loading.value) return
+  const text = input.value.trim()
+  if (!text || loading.value) return
 
-  messages.value.push({ id: `${Date.now()}-u`, role: 'user', content, created_at: new Date().toISOString() })
-  input.value = ''
   loading.value = true
+  messages.value.push({ id: `${Date.now()}-u`, role: 'user', content: text })
+  const aiId = `${Date.now()}-a`
+  messages.value.push({ id: aiId, role: 'assistant', content: '', isStreaming: true })
+  input.value = ''
+  scrollToBottom()
 
-  const aiMsgId = `${Date.now()}-a`
-  messages.value.push({ id: aiMsgId, role: 'assistant', content: '', created_at: new Date().toISOString(), isStreaming: true })
-  const aiMsg = messages.value[messages.value.length - 1]
+  try {
+    const res = await chatApi.streamChat(text, {
+      contextId: sessionId.value || undefined,
+      generateImage: showImageGen.value || undefined,
+      imageStyle: showImageGen.value ? imageStyle.value : undefined,
+      imageRatio: showImageGen.value ? imageRatio.value : undefined,
+    })
 
-  apiService.chatStream(
-    content,
-    sessionId.value || undefined,
-    (token) => {
-      aiMsg.content += token
-    },
-    (contextId) => {
-      sessionId.value = contextId
+    let fullContent = ''
+    await readSSE(res, {
+      onToken(data) {
+        fullContent += data.content || ''
+        const aiMsg = messages.value.find(m => m.id === aiId)
+        if (aiMsg) {
+          aiMsg.content = fullContent
+          aiMsg.isStreaming = true
+        }
+        scrollToBottom()
+      },
+      onImageIntent(data) {
+        const aiMsg = messages.value.find(m => m.id === aiId)
+        if (aiMsg) aiMsg.imageProgress = data.message || '正在生成图片...'
+        scrollToBottom()
+      },
+      onImageProgress(data) {
+        const aiMsg = messages.value.find(m => m.id === aiId)
+        if (aiMsg) aiMsg.imageProgress = data.message || data.status || '生成中...'
+      },
+      onImageResult(data) {
+        const aiMsg = messages.value.find(m => m.id === aiId)
+        if (aiMsg) {
+          aiMsg.imageUrl = data.imageUrl
+          aiMsg.imageProgress = undefined
+        }
+        scrollToBottom()
+      },
+      onDone(data) {
+        const aiMsg = messages.value.find(m => m.id === aiId)
+        if (aiMsg) {
+          aiMsg.isStreaming = false
+          aiMsg.messageId = data.messageId
+        }
+        if (data.contextId) {
+          sessionId.value = data.contextId
+          sessionStore.loadSessions()
+        }
+        loading.value = false
+        scrollToBottom()
+      },
+      onError(data) {
+        const aiMsg = messages.value.find(m => m.id === aiId)
+        if (aiMsg) {
+          aiMsg.isStreaming = false
+          aiMsg.content = `错误: ${data.message || '未知错误'}`
+        }
+        loading.value = false
+      },
+    })
+  } catch (e: any) {
+    const aiMsg = messages.value.find(m => m.id === aiId)
+    if (aiMsg) {
       aiMsg.isStreaming = false
-      loading.value = false
-      sessionStore.loadSessions()
-    },
-    async (error) => {
-      // Fallback to non-streaming on error
-      try {
-        const res = await apiService.chat(content, sessionId.value || undefined)
-        sessionId.value = res.contextId
-        aiMsg.content = res.reply
-        aiMsg.isStreaming = false
-        loading.value = false
-        await sessionStore.loadSessions()
-      } catch {
-        aiMsg.content = `出错了：${error}`
-        aiMsg.isStreaming = false
-        loading.value = false
-      }
-    },
-  )
+      aiMsg.content = `发送失败: ${e.message}`
+    }
+    loading.value = false
+  }
 }
 
-watch(
-  () => route.query.sessionId,
-  async (val) => {
-    const id = typeof val === 'string' ? val : ''
-    if (!id) {
-      newSession()
-      return
-    }
-    await loadSession(id)
-  },
-  { immediate: true }
-)
-
-onMounted(async () => {
-  if (!route.query.sessionId) {
-    newSession()
+async function regenerateMessage(m: Message) {
+  if (!m.messageId) return
+  loading.value = true
+  const aiId = `${Date.now()}-a`
+  const idx = messages.value.findIndex(msg => msg.id === m.id)
+  if (idx !== -1) {
+    messages.value.splice(idx + 1)
+    messages.value.push({ id: aiId, role: 'assistant', content: '', isStreaming: true })
   }
+  scrollToBottom()
+
+  try {
+    const res = await chatApi.streamRegenerate(m.messageId)
+    let fullContent = ''
+    await readSSE(res, {
+      onToken(data) {
+        fullContent += data.content || ''
+        const aiMsg = messages.value.find(msg => msg.id === aiId)
+        if (aiMsg) { aiMsg.content = fullContent; aiMsg.isStreaming = true }
+        scrollToBottom()
+      },
+      onDone(data) {
+        const aiMsg = messages.value.find(msg => msg.id === aiId)
+        if (aiMsg) { aiMsg.isStreaming = false; aiMsg.messageId = data.messageId }
+        loading.value = false
+        scrollToBottom()
+      },
+      onError(data) {
+        const aiMsg = messages.value.find(msg => msg.id === aiId)
+        if (aiMsg) { aiMsg.isStreaming = false; aiMsg.content = `错误: ${data.message}` }
+        loading.value = false
+      },
+    })
+  } catch (e: any) {
+    const aiMsg = messages.value.find(msg => msg.id === aiId)
+    if (aiMsg) { aiMsg.isStreaming = false; aiMsg.content = `重新生成失败: ${e.message}` }
+    loading.value = false
+  }
+}
+
+async function exportTravel(m: Message) {
+  if (!sessionId.value) return
+  try {
+    const res = await travelApi.exportTravel(sessionId.value, 'pdf')
+    const blob = new Blob([res.data as any], { type: 'application/pdf' })
+    downloadBlob(blob, `${m.content.slice(0, 20) || 'travel'}.pdf`)
+  } catch (e) {
+    console.error('导出失败:', e)
+  }
+}
+
+function openShare(type: 'travel' | 'image', id: string) {
+  shareType.value = type
+  shareContentId.value = id
+  shareVisible.value = true
+}
+
+async function favoriteImage(m: Message) {
+  if (!m.imageUrl) return
+  try {
+    await imageApi.addFavorite({
+      imageUrl: m.imageUrl,
+      prompt: m.content,
+    })
+    alert('已收藏')
+  } catch (e: any) {
+    alert('收藏失败: ' + (e.response?.data?.detail || e.message))
+  }
+}
+
+onMounted(() => {
+  if (sessionId.value) loadSession(sessionId.value)
 })
 </script>

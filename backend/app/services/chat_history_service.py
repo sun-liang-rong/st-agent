@@ -3,10 +3,11 @@ import json
 import logging
 import asyncio
 import time
+from datetime import datetime
 from typing import AsyncGenerator, List, Optional
 
 import httpx
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -43,6 +44,7 @@ def save_chat(
     context_id: Optional[str] = None,
     session_type: Optional[str] = "chat",
     title: Optional[str] = None,
+    image_url: Optional[str] = None,
     image_ratio: Optional[str] = None,
 ) -> ChatHistory:
     """Save one chat record."""
@@ -50,6 +52,7 @@ def save_chat(
     record = ChatHistory(
         context_id=context_id,
         session_type=session_type,
+        image_url=image_url,
         image_ratio=image_ratio,
         title=display_title,
         user_message=user_message,
@@ -161,9 +164,10 @@ async def stream_chat_message(
 
 
 def get_chat_list(db: Session) -> List[ChatHistory]:
-    """Get chat history list."""
+    """Get chat history list (excluding deleted)."""
     records = (
         db.query(ChatHistory)
+        .filter(ChatHistory.is_deleted == False)
         .order_by(ChatHistory.created_at.desc())
         .all()
     )
@@ -180,13 +184,16 @@ def get_chat_list(db: Session) -> List[ChatHistory]:
 
 
 def get_chat_detail(db: Session, history_id: int) -> Optional[ChatHistory]:
-    return db.query(ChatHistory).filter(ChatHistory.id == history_id).first()
+    return db.query(ChatHistory).filter(
+        ChatHistory.id == history_id,
+        ChatHistory.is_deleted == False,
+    ).first()
 
 
 def get_chat_group(db: Session, context_id: str) -> List[ChatHistory]:
     return (
         db.query(ChatHistory)
-        .filter(ChatHistory.context_id == context_id)
+        .filter(ChatHistory.context_id == context_id, ChatHistory.is_deleted == False)
         .order_by(ChatHistory.created_at.asc())
         .all()
     )
@@ -199,7 +206,7 @@ def get_session_list(db: Session):
             func.max(ChatHistory.created_at).label("updated_at"),
             func.min(ChatHistory.id).label("first_id"),
         )
-        .filter(ChatHistory.context_id.isnot(None))
+        .filter(ChatHistory.context_id.isnot(None), ChatHistory.is_deleted == False)
         .group_by(ChatHistory.context_id)
         .order_by(func.max(ChatHistory.created_at).desc())
         .all()
@@ -223,8 +230,145 @@ def get_session_list(db: Session):
 
 
 def delete_chat(db: Session, context_id: str) -> bool:
-    count = db.query(ChatHistory).filter(ChatHistory.context_id == context_id).delete()
+    """Soft delete: mark all records in a session as deleted."""
+    now = datetime.utcnow()
+    count = (
+        db.query(ChatHistory)
+        .filter(ChatHistory.context_id == context_id, ChatHistory.is_deleted == False)
+        .update({ChatHistory.is_deleted: True, ChatHistory.deleted_at: now}, synchronize_session=False)
+    )
     if count == 0:
         return False
     db.commit()
     return True
+
+
+def rename_session(db: Session, context_id: str, title: str) -> bool:
+    """Rename all records in one session."""
+    normalized_title = title.strip()
+    if not normalized_title:
+        return False
+    count = (
+        db.query(ChatHistory)
+        .filter(ChatHistory.context_id == context_id, ChatHistory.is_deleted == False)
+        .update({ChatHistory.title: normalized_title}, synchronize_session=False)
+    )
+    if count == 0:
+        return False
+    db.commit()
+    return True
+
+
+# ─── 搜索功能 ───────────────────────────────────────────────────
+
+
+def search_sessions(db: Session, keyword: str, limit: int = 20) -> List[dict]:
+    """搜索会话：匹配标题、用户消息、AI回复"""
+    pattern = f"%{keyword}%"
+    results = (
+        db.query(ChatHistory)
+        .filter(
+            ChatHistory.is_deleted == False,
+            ChatHistory.context_id.isnot(None),
+            or_(
+                ChatHistory.title.like(pattern),
+                ChatHistory.user_message.like(pattern),
+                ChatHistory.ai_reply.like(pattern),
+            ),
+        )
+        .order_by(ChatHistory.created_at.desc())
+        .limit(limit * 5)  # Get more to deduplicate
+        .all()
+    )
+
+    seen_contexts = set()
+    out = []
+    for r in results:
+        if r.context_id in seen_contexts:
+            continue
+        seen_contexts.add(r.context_id)
+
+        # Extract matching snippet
+        snippet = ""
+        if keyword.lower() in (r.user_message or "").lower():
+            snippet = r.user_message[:80]
+        elif keyword.lower() in (r.ai_reply or "").lower():
+            # Find the line containing the keyword
+            for line in (r.ai_reply or "").split("\n"):
+                if keyword.lower() in line.lower():
+                    snippet = line[:80]
+                    break
+            if not snippet:
+                snippet = r.ai_reply[:80]
+
+        out.append({
+            "context_id": r.context_id,
+            "title": r.title or r.user_message[:30],
+            "session_type": r.session_type or "chat",
+            "snippet": snippet,
+            "created_at": r.created_at.isoformat() if r.created_at else "",
+        })
+    return out[:limit]
+
+
+# ─── 回收站功能 ─────────────────────────────────────────────────
+
+
+def get_deleted_sessions(db: Session) -> List[dict]:
+    """获取已软删除的会话列表"""
+    grouped = (
+        db.query(
+            ChatHistory.context_id.label("context_id"),
+            func.max(ChatHistory.created_at).label("updated_at"),
+            func.min(ChatHistory.id).label("first_id"),
+            func.max(ChatHistory.deleted_at).label("deleted_at"),
+        )
+        .filter(ChatHistory.context_id.isnot(None), ChatHistory.is_deleted == True)
+        .group_by(ChatHistory.context_id)
+        .order_by(func.max(ChatHistory.deleted_at).desc())
+        .all()
+    )
+
+    result = []
+    for g in grouped:
+        first = db.query(ChatHistory).filter(ChatHistory.id == g.first_id).first()
+        if not first:
+            continue
+        result.append({
+            "context_id": g.context_id,
+            "title": first.title or first.user_message[:30],
+            "session_type": first.session_type or "chat",
+            "deleted_at": g.deleted_at.isoformat() if g.deleted_at else "",
+        })
+    return result
+
+
+def restore_session(db: Session, context_id: str) -> bool:
+    """恢复已删除的会话"""
+    count = (
+        db.query(ChatHistory)
+        .filter(ChatHistory.context_id == context_id, ChatHistory.is_deleted == True)
+        .update({ChatHistory.is_deleted: False, ChatHistory.deleted_at: None}, synchronize_session=False)
+    )
+    if count == 0:
+        return False
+    db.commit()
+    return True
+
+
+def permanent_delete_session(db: Session, context_id: str) -> bool:
+    """永久删除会话（从数据库中彻底移除）"""
+    count = db.query(ChatHistory).filter(
+        ChatHistory.context_id == context_id, ChatHistory.is_deleted == True
+    ).delete()
+    if count == 0:
+        return False
+    db.commit()
+    return True
+
+
+def clear_trash(db: Session) -> int:
+    """清空回收站：永久删除所有已软删除的记录"""
+    count = db.query(ChatHistory).filter(ChatHistory.is_deleted == True).delete()
+    db.commit()
+    return count

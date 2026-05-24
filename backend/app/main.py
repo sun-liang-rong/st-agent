@@ -1,15 +1,16 @@
 """FastAPI 主应用"""
 import logging
 import sys
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 import os
+import subprocess
 
 from app.config import get_settings
 from app.api import router as api_router
-from app.models import Base, engine
 
 
 settings = get_settings()
@@ -23,7 +24,7 @@ logging.basicConfig(
     format=LOG_FORMAT,
     datefmt=LOG_DATE_FORMAT,
     handlers=[
-        logging.StreamHandler(sys.stdout),  # 输出到控制台
+        logging.StreamHandler(sys.stdout),
     ],
 )
 
@@ -34,27 +35,45 @@ logging.getLogger("sqlalchemy").setLevel(logging.WARNING)
 logging.getLogger("uvicorn.access").setLevel(logging.INFO)
 
 logger = logging.getLogger("app")
-logger.info("🚀 应用启动中...")
 
 # 确保上传和生成目录存在
 os.makedirs("uploads", exist_ok=True)
 os.makedirs("generated", exist_ok=True)
 
 
-# 创建数据库表
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期：启动时执行 Alembic 迁移"""
+    logger.info("🚀 应用启动中...")
+    try:
+        import sys
+        alembic_cmd = [sys.executable, "-m", "alembic", "upgrade", "head"]
+        result = subprocess.run(
+            alembic_cmd,
+            capture_output=True, text=True, cwd=os.path.dirname(__file__) or ".",
+        )
+        if result.returncode == 0:
+            logger.info("✅ Alembic 迁移完成")
+        else:
+            logger.warning("⚠️ Alembic 迁移警告: %s", result.stderr)
+    except Exception as e:
+        logger.warning("⚠️ Alembic 迁移失败: %s", e)
+    yield
+    logger.info("👋 应用关闭")
 
 
 # 挂载静态文件目录（生成的图片可通过 /generated/xxx.png 访问）
 app = FastAPI(
     title=settings.APP_NAME,
-    description="AI 智能报表生成平台后端 API",
+    description="AI 旅游攻略与图片生成平台后端 API",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 app.mount("/generated", StaticFiles(directory="generated"), name="generated")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # 配置 CORS
 origins = settings.CORS_ORIGINS.split(",")
@@ -87,7 +106,7 @@ async def health_check():
 async def root():
     """根路径"""
     return {
-        "message": "AI 报表生成平台 API",
+        "message": "AI 旅游攻略与图片生成平台 API",
         "version": "1.0.0",
         "docs": "/docs",
     }

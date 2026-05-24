@@ -1,67 +1,63 @@
-﻿import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-
-const routes: RouteRecordRaw[] = [
-  {
-    path: '/',
-    redirect: '/app',
-  },
-  {
-    path: '/app',
-    name: 'home',
-    component: () => import('@/pages/Home.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/image',
-    name: 'image',
-    component: () => import('@/pages/ImageGen.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/login',
-    name: 'login',
-    component: () => import('@/pages/Login.vue'),
-    meta: { guest: true }
-  },
-  {
-    path: '/register',
-    name: 'register',
-    component: () => import('@/pages/Register.vue'),
-    meta: { guest: true }
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    name: 'not-found',
-    component: () => import('@/pages/NotFound.vue'),
-  }
-]
+import { createRouter, createWebHistory } from 'vue-router'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes,
+  routes: [
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('@/pages/Login.vue'),
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: () => import('@/pages/Register.vue'),
+    },
+    {
+      path: '/app',
+      name: 'chat',
+      component: () => import('@/pages/Home.vue'),
+    },
+    {
+      path: '/image',
+      name: 'image',
+      component: () => import('@/pages/ImageGen.vue'),
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/pages/Settings.vue'),
+    },
+    {
+      path: '/favorites',
+      name: 'favorites',
+      component: () => import('@/pages/Favorites.vue'),
+    },
+    {
+      path: '/share/:token',
+      name: 'share',
+      component: () => import('@/pages/ShareView.vue'),
+      meta: { noAuth: true },
+    },
+    {
+      path: '/',
+      redirect: '/app',
+    },
+  ],
 })
 
-router.beforeEach(async (to, _from, next) => {
-  const authStore = useAuthStore()
-
-  if (to.meta.requiresAuth) {
-    if (!authStore.isAuthenticated) {
-      await authStore.checkAuth()
-    }
-
-    if (!authStore.isAuthenticated) {
-      next({ name: 'login', query: { redirect: to.fullPath } })
-      return
-    }
-  }
-
-  if (to.meta.guest && authStore.isAuthenticated) {
-    next({ name: 'home' })
+// Auth guard
+router.beforeEach((to, _from, next) => {
+  if (to.meta.noAuth) {
+    next()
     return
   }
-
-  next()
+  const token = localStorage.getItem('token')
+  if (!token && to.path !== '/login' && to.path !== '/register') {
+    next('/login')
+  } else {
+    next()
+  }
 })
 
 export default router

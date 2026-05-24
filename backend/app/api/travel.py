@@ -2,14 +2,17 @@
 import json
 import uuid
 import logging
+import os
+import tempfile
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.services.ai_service import aiservice
 from app.models import get_db
-from app.services.chat_history_service import save_chat
+from app.services.chat_history_service import save_chat, get_chat_group
+from app.services.export_service import export_to_pdf, export_to_image
 
 logger = logging.getLogger("app.api.travel")
 
@@ -20,6 +23,13 @@ class TravelRequest(BaseModel):
     destination: str = Field(..., min_length=1, description='目的地（如 "上海一日游"）')
     days: int = Field(0, ge=0, le=30, description="旅行天数（0 表示让 AI 从目的地文本自行解析）")
     preferences: str = Field("", description="偏好（可空，AI 从目的地文本自行解析）")
+
+
+class ExportRequest(BaseModel):
+    context_id: str = Field(..., alias="contextId", description="攻略的会话上下文ID")
+    format: str = Field("pdf", pattern="^(pdf|image)$", description="导出格式：pdf 或 image")
+
+    model_config = {"populate_by_name": True}
 
 
 def sse_event(event_type: str, data: dict) -> str:
@@ -107,3 +117,56 @@ async def generate_travel_stream(request: TravelRequest, db: Session = Depends(g
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@router.post("/export")
+async def export_travel(request: ExportRequest, db: Session = Depends(get_db)):
+    """导出旅游攻略为 PDF 或图片"""
+    # 获取攻略内容
+    records = get_chat_group(db, request.context_id)
+    if not records:
+        raise HTTPException(status_code=404, detail="攻略会话不存在")
+
+    # 拼合完整内容
+    full_content = ""
+    for r in records:
+        if r.ai_reply:
+            full_content += r.ai_reply + "\n\n"
+    title = records[0].title or "旅游攻略"
+
+    if not full_content.strip():
+        raise HTTPException(status_code=400, detail="攻略内容为空")
+
+    # 生成导出文件
+    export_dir = tempfile.mkdtemp()
+    if request.format == "pdf":
+        output_path = os.path.join(export_dir, f"{title}.pdf")
+        success = export_to_pdf(full_content, output_path, title)
+        if not success:
+            raise HTTPException(status_code=500, detail="PDF 导出失败")
+        return FileResponse(
+            output_path,
+            media_type="application/pdf",
+            filename=f"{title}.pdf",
+            background=lambda: _cleanup_temp(export_dir),
+        )
+    else:
+        output_path = os.path.join(export_dir, f"{title}.png")
+        success = export_to_image(full_content, output_path, title)
+        if not success:
+            raise HTTPException(status_code=500, detail="图片导出失败")
+        return FileResponse(
+            output_path,
+            media_type="image/png",
+            filename=f"{title}.png",
+            background=lambda: _cleanup_temp(export_dir),
+        )
+
+
+def _cleanup_temp(export_dir: str):
+    """清理临时目录"""
+    import shutil
+    try:
+        shutil.rmtree(export_dir, ignore_errors=True)
+    except Exception:
+        pass

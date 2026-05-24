@@ -33,6 +33,14 @@ def _is_retryable_error(e: Exception) -> bool:
 class AIService:
     """AI 服务类 — 旅游攻略 + 图片生成"""
 
+    # 图片意图关键词
+    IMAGE_INTENT_KEYWORDS = [
+        "生成图片", "画一张", "画一个", "看看什么样", "图片",
+        "画", "生成一张", "帮我画", "画个", "画幅",
+        "出图", "出一张图", "来张图", "来一张",
+        "生成海报", "生成插画", "生成照片",
+    ]
+
     def __init__(self):
         self.api_key = settings.SENSENOVA_API_KEY
         self.api_base = settings.SENSENOVA_API_BASE
@@ -43,6 +51,12 @@ class AIService:
             "✅ AI 服务初始化 | prompt_model=%s u1_model=%s api_base=%s",
             self.prompt_model, self.u1_model, self.api_base,
         )
+
+    @classmethod
+    def detect_image_intent(cls, user_message: str) -> bool:
+        """检测用户消息是否包含图片生成意图"""
+        msg_lower = user_message.lower()
+        return any(kw in msg_lower for kw in cls.IMAGE_INTENT_KEYWORDS)
 
     async def generate_travel_itinerary_stream(
         self,

@@ -71,6 +71,13 @@ export const useAppStore = defineStore('app', () => {
     localStorage.setItem('appLocale', l)
   }
 
+  function setTheme(t: ThemeMode) {
+    theme.value = t
+    settings.value.theme = t
+    updateSettings()
+    applyTheme()
+  }
+
   function toggleTheme() {
     const order: ThemeMode[] = ['light', 'dark', 'system']
     const idx = order.indexOf(theme.value)
@@ -152,6 +159,7 @@ export const useAppStore = defineStore('app', () => {
     resolvedTheme,
     prefersDark,
     toggleTheme,
+    setTheme,
     setLocale,
     updateSettings,
     loadSettings,

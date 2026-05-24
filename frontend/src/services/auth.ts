@@ -10,7 +10,7 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token')
+    const token = localStorage.getItem('token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -27,7 +27,7 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('access_token')
+      localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'
     }
@@ -56,6 +56,7 @@ export interface UserResponse {
   username: string
   email: string
   full_name?: string
+  avatar_url?: string
   is_active: boolean
   created_at: string
 }
@@ -82,7 +83,23 @@ export const authApi = {
 
   getCurrentUser(): Promise<UserResponse> {
     return api.get('/auth/me')
-  }
+  },
+
+  updateProfile(data: { full_name?: string; email?: string }): Promise<UserResponse> {
+    return api.put('/auth/profile', data)
+  },
+
+  changePassword(data: { old_password: string; new_password: string }): Promise<void> {
+    return api.put('/auth/password', data)
+  },
+
+  uploadAvatar(file: File): Promise<{ avatar_url: string }> {
+    const fd = new FormData()
+    fd.append('file', file)
+    return api.post('/auth/avatar', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
 }
 
 export default api
